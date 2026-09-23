@@ -3,11 +3,11 @@ from abc import ABC
 
 class Node()
 	"""Aquí va todo lo relacionado con los nodos:
-		- capacidad
-		- peso
-		- origen
-		- entrada
-		- salida
+		- capacidad: int
+		- peso: int
+		- origen: bool
+		- salida:bool
+		- Conecciones: list[list[str]]
 	"""
 
 class Connections(ABC, Node)
@@ -15,11 +15,11 @@ class Connections(ABC, Node)
 		Aquí va todo sobre las conexiones entre drones
 	"""
 	@abstractmethod
-	def nodeconnector(self, node_a: Node, node_b) -> dict[tuple[node | node]]
+	def nodeconnector(self, node_a: Node, node_b) -> dict[int, tuple[node | node]] #aqui se incluye el link capacity y los nodos conectados
 		...
 
 	@abstractmethod
-	def listofconnections(self, edge: tuple[node | node]) -> list[tuple[node | node]]:
+	def listofconnections(self, edge: tuple[node | node]) -> list[dict[int, tuple[node | node]]:
 		...
 
 
