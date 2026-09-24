@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections import deque
 
 class Node:
     def __init__(
@@ -30,14 +31,44 @@ c = Node("c", 7, 1)
 d = Node("d", 11, 5)
 e = Node("e", 15, 5, exit=True)
 
+f = Node("f", 9, 12)
+g = Node("g", 12, 12)
+
 a.connect(b)
 a.connect(c)
 b.connect(d)
 c.connect(d)
 d.connect(e)
 
-nodes = [a, b, c, d, e]
+b.connect(f)
+f.connect(g)
 
+nodes = [a, b, c, d, e, f, g]
+
+def FirstAlgorithm():
+    #drone = (a.x, a.y)
+    visited_nodes: list[node] = []
+    movements: int = 0
+
+    new_node = a
+    for i in range(5):
+        prev_node = deque(new_node.connections)
+        new_node = prev_node.popleft()
+        print(f"Drone is at {new_node.name}")
+        
+        
+        
+        
+        
+
+if __name__ == "__main__":
+    FirstAlgorithm()
+
+
+
+
+
+"""
 for node in nodes:
     print(
         node.name,
@@ -45,4 +76,4 @@ for node in nodes:
         "entry:", node.entry,
         "exit:", node.exit,
         "connections:", node.connections,
-    )
+    )"""
