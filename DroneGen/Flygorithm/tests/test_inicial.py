@@ -36,44 +36,55 @@ g = Node("g", 12, 12)
 
 a.connect(b)
 a.connect(c)
+b.connect(f)
 b.connect(d)
 c.connect(d)
 d.connect(e)
 
-b.connect(f)
+
 f.connect(g)
 
 nodes = [a, b, c, d, e, f, g]
 
-def FirstAlgorithm():
-    #drone = (a.x, a.y)
-    visited_nodes: list[node] = []
-    movements: int = 0
+def drone(node: node):
+    print(f"Drone is at {node.name}")
 
-    new_node = a
-    for i in range(5):
-        prev_node = deque(new_node.connections)
-        new_node = prev_node.popleft()
-        print(f"Drone is at {new_node.name}")
-        
-        
+def FirstAlgorithm():
+    available_nodes: list[node] = []
+    visited_nodes: list[node] = []
+    
+    new_node: node = a
+    visited_nodes.append(a)
+    drone(new_node)
+
+    goback:int = 2
+    while (new_node.exit is False):
+        available_nodes = [node for node in new_node.connections if node not in visited_nodes]
+        if not available_nodes:
+            path : list[node] = visited_nodes.copy()
+            new_node = path[-goback]
+            drone(new_node)
+            goback += 1
+            continue
+        av_node = deque(available_nodes)
+        new_node = av_node.popleft()
+        visited_nodes.append(new_node)
+        drone(new_node)
+        goback = 2
+    print("Se acabó lo que se daba")    
         
         
         
 
 if __name__ == "__main__":
     FirstAlgorithm()
+    
 
-
-
-
-
-"""
-for node in nodes:
-    print(
-        node.name,
-        (node.x, node.y),
-        "entry:", node.entry,
-        "exit:", node.exit,
-        "connections:", node.connections,
-    )"""
+    for node in nodes:
+        print(
+            node.name,
+            (node.x, node.y),
+            "entry:", node.entry,
+            "exit:", node.exit,
+            "connections:", node.connections,
+        )
