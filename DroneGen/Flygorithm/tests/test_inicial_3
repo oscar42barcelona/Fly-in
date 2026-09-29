@@ -1,0 +1,45 @@
+from __future__ import annotations
+from collections.abc import Generator
+from collections import deque
+
+class Node:
+    def __init__(
+        self,
+        name: str,
+        x: int,
+        y: int,
+        entry: bool = False,
+        exit: bool = False,
+    ) -> None:
+        self.name = name
+        self.x = x
+        self.y = y
+        self.entry = entry
+        self.exit = exit
+        self.connections: list[Node] = []
+        self.nb_drones: int = 0
+
+    def connect(self, node: Node) -> None:
+        self.connections.append(node)
+        node.connections.append(self)
+
+    def __repr__(self) -> str:
+        return self.name
+
+
+a = Node("a", 3, 5, entry=True)
+b = Node("b", 7, 9)
+c = Node("c", 7, 1)
+d = Node("d", 11, 5)
+e = Node("e", 15, 5, exit=True)
+
+f = Node("f", 9, 12)
+g = Node("g", 12, 12)
+
+a.connect(b)
+a.connect(c)
+b.connect(f)
+b.connect(d)
+c.connect(d)
+d.connect(e)
+
