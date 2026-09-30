@@ -78,6 +78,9 @@ def FourthAlgorithm(drone: Drone) -> Generator[tuple[int, int], None, None]:
             continue
         av_node = deque(available_nodes)
         new_node: node = av_node.popleft()
+        if new_node.nb_drones:
+            visited_nodes.append(new_node)
+            continue
         drone.current_stop(new_node)
         visited_nodes.append(new_node)
         yield (drone)
