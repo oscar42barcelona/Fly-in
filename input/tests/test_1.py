@@ -1,7 +1,21 @@
+def typer( hub_type: str) -> str:
+    if hub_type.startswith("start_hub"):
+        return "entry"
+    elif hub_type.startswith("end_hub"):
+        return "exit"
+    else:
+        return "intermediate"
+
 def FormatHub(self, line: str, number: int) -> dict[str, int | str]:
     """Formatea una línea de hub, inicio o destino."""
-    line = line.split(":", 1)[1].strip()
     hub_dict: dict[str, int | str] = {}
+    
+
+    hub_type, line = line.split(":", 1)
+    hub_type = hub_type.strip()
+    hub_dict["type"] = typer(hub_type)
+
+    line = line.strip()
     name_coord: str = line
 
     if '[' in line:
@@ -13,7 +27,7 @@ def FormatHub(self, line: str, number: int) -> dict[str, int | str]:
             raise ValueError(
                 f"Line {number}: Missing ']'. Content: {line}")
 
-        zone_color_max = zone_color_max[:-2]
+        zone_color_max = zone_color_max[:-1]
         zone_color_max = zone_color_max.split(' ', 3)
 
         for item in zone_color_max:
@@ -37,10 +51,22 @@ def FormatHub(self, line: str, number: int) -> dict[str, int | str]:
 
     return hub_dict
 
-if __name__ == "__main__":
-    print(FormatHub(
-        None,
-        "hub: roof1 3 4 [zone=restricted color=red max_drones=2]",
-        1
-    ))
+def main() -> None:
+    pruebas = [
+        "hub: roof1 3 4",
+        "start_hub: entrada 0 0 [color=green]",
+        "end_hub: salida 10 10 [color=yellow]",
+        "hub: roof2 6 2 [zone=normal color=blue]",
+        "hub: corridorA 4 3 [zone=priority color=green max_drones=2]",
+        "hub: tunnelB 7 4 [max_drones=3 color=red zone=restricted]",
+        "hub: obstacleX 5 5 [zone=blocked color=gray]",
+    ]
 
+    for number, line in enumerate(pruebas, start=1):
+        print(f"Prueba {number}: {line}")
+        resultado = FormatHub(None, line, number)
+        print(resultado)
+
+
+if __name__ == "__main__":
+    main()
