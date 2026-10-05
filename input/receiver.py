@@ -156,6 +156,21 @@ class receiver:
 
         return mapa
 
+    def Process() ->Map | None:
+        try:
+            list_lines: list[str] = self.reader()
+            dictforpy: dict[str, object] = self.slicer(list_lines)
+            return Map.model_validate(dictforpy)
+            ...
+        except FileNotFoundError as error:
+            print(error)
+        except PermissionError as error:
+            print(error)
+        except ValidationError as error:
+            print(error)
+        except ValueError as error:
+            print(error)
+
 
 receiver = receiver()
 lista = receiver.reader()
