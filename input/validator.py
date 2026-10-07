@@ -32,17 +32,43 @@ class Hub(BaseModel):
     COLOR: str | None = Field(alias="color", default="grey")
     MAX_DRONES: int = Field(alias="max_drones", default=1)
 
+    @field_validator("NAME")
+    @classmethod
+    def valid_names(cls, NAME: str) -> str:
+        if " " in name or "-" in name:
+            raise ValueError(
+                "Zone names cannot contain dashes or spaces")
+        return name
+ 
 
 class Connections(BaseModel):
     HUB1: str = Field(alias="hub1")
     HUB2: str = Field(alias="hub2")
     LINK_CAPACITY: int | None = Field(alias="link_capacity", default=1)
 
+    @field_validator("CONNECTIONS", mode="before")
+    @classmethod
+    def one_connection(cls, 
+        value: list[dict[str, int | str]]) -> list[dict[str, int | str]]:
+        for dic in value:
+
 
 class Map_(BaseModel): 
     NB_DRONES: int = Field(alias="nb_drones", ge=1, le=100)
-    HUBS: list[Hub]
+    HUBS: list[Hub] = Field(alias="Hubs", ge=3)
     START_HUB: str = Field(alias="start_hub") #hay que hacer reglas con estte.
     END_HUB: str = Field(alias="end_hub")
-    CONNECTIONS: list[Connections] #hay que hacer reglas aqui tambien
+    CONNECTIONS: list[Connections] = Field(alias="Connections") #hay que hacer reglas aqui tambien
+
+
+    @field_validator("HUBS")
+    @classmethod
+    def one_start_end(cls, HUBS: list[hub]) -> "HUBS"
+        for hub_type in (HubType.ENTRY, HubType.EXIT):
+            amount = sum(node.TYPE == hub_type for node in HUBS)
+
+            if amount != 1:
+                raise ValueError(
+                    f"There must be exactly one {hub_type.value} hub")
+        return HUBS
 

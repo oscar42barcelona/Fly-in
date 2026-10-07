@@ -150,8 +150,8 @@ class receiver:
                 raise ValueError(
                     f"Line {number}: Unknown prefix. Content: {line}")
 
-        mapa["hubs"] = hubs
-        mapa["connections"] = connections
+        mapa["Hubs"] = hubs
+        mapa["Connections"] = connections
 
         return mapa
     
