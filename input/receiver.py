@@ -1,5 +1,6 @@
 from sys import argv
-
+from validator import Map_
+from pydantic import ValidationError
 
 class receiver:
     def reader(self) -> list[str]:
@@ -113,8 +114,6 @@ class receiver:
 
         return connections_dict
         
-            
-
     def slicer(self, lines: list[str]) -> dict[str, object]:
         hubs: list[dict[str, int | str]] = []
         connections: list[dict[str, int | str]] = []
@@ -155,23 +154,23 @@ class receiver:
         mapa["connections"] = connections
 
         return mapa
-
-    def Process() ->Map | None:
+    
+    def Process(self) -> Map_ | None:
         try:
             list_lines: list[str] = self.reader()
             dictforpy: dict[str, object] = self.slicer(list_lines)
-            return Map.model_validate(dictforpy)
-            ...
+            return Map_.model_validate(dictforpy)
+
+        except IndexError as error:
+            print(f"We need a map to run :)")
         except FileNotFoundError as error:
             print(error)
         except PermissionError as error:
             print(error)
         except ValidationError as error:
-            print(error)
+            for item in error.errors():
+                print(item["loc"])
+                print(item["msg"])
+                print(item["input"])
         except ValueError as error:
             print(error)
-
-
-receiver = receiver()
-lista = receiver.reader()
-print(receiver.slicer(lista))
