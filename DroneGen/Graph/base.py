@@ -10,7 +10,7 @@ class Node()
 		- Conecciones: list[list[str]]
 	"""
 
-class Connections(ABC, Node)
+class Connections(ABC)
 	"""
 		Aquí va todo sobre las conexiones entre drones
 	"""
@@ -20,7 +20,7 @@ class Connections(ABC, Node)
 
 	@abstractmethod
 	def listofconnections(self, edge: tuple[node | node]) -> list[dict[int, tuple[node | node]]:
-		...
+		#ir paso a paso actualizando el node.conecciones
 
 
 class Map(Connections, Node):
