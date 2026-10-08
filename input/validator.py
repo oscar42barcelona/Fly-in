@@ -46,12 +46,12 @@ class Connections(BaseModel):
     HUB2: str = Field(alias="hub2")
     LINK_CAPACITY: int | None = Field(alias="link_capacity", default=1)
 
-    @field_validator("CONNECTIONS", mode="before")
-    @classmethod
-    def one_connection(cls, 
-        value: list[dict[str, int | str]]) -> list[dict[str, int | str]]:
-        for dic in value:
-
+    @model_validator(mode="after")
+    def UniqueHub(self) -> "Conections"
+        if self.HUB1 == self.HUB2:
+            raise ValueError("A Hub cannot connect to itself :(")
+        return self
+    
 
 class Map_(BaseModel): 
     NB_DRONES: int = Field(alias="nb_drones", ge=1, le=100)
@@ -71,4 +71,28 @@ class Map_(BaseModel):
                 raise ValueError(
                     f"There must be exactly one {hub_type.value} hub")
         return HUBS
+
+    @field_validator(CONNECTIONS, mode="after")
+    def UniqueConnections(cls, CONNECTIONS: list[Connections]) -> "CONNECTIONS":
+        list_: list[tuple[tuple, tuple]] = [] #bidirectional list
+        counter: int = 0
+        i: int = 1
+
+        for con in CONNECTIONS:
+            tuple1 = (con.HUB1, con.HUB2)
+            tuple2 = (con.HUB2, con.HUB1)
+            list_.append((tuple1, tuple2))
+
+        for item in list_:
+            pair = item[0]
+            counter += 1
+            i = 1
+            for valores in list_:
+                if i == counter:
+                    i += 1
+                    continue
+                if pair in valores:
+                    raise ValueError("Pair or Hub Connections must be unique")
+                i += 1
+        return CONNECTIONS
 
