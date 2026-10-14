@@ -74,6 +74,7 @@ class Map_(BaseModel):
 
     @field_validator(CONNECTIONS, mode="after")
     def UniqueConnections(cls, CONNECTIONS: list[Connections]) -> "CONNECTIONS":
+
         pairs: list[tuple[str | str]] = [(con.HUB1, con.HUB2) for con in CONNECTIONS]
 
         seen = set()
@@ -89,3 +90,12 @@ class Map_(BaseModel):
 
         return CONNECTIONS
 
+    @model_validator(CONNECTIONS, mode="after")
+    def defined_connections(self) -> "CONNECTIONS":
+
+        hub_names: list[str] = [hub.NAME for hub in self.HUBS]
+        
+        for name in hub_names:
+            for con in self.connections:
+                if name == con.HUB1 or name == con.HUB2:
+                    raise ValueError("Connections and hubs must coincide") #seguir por aqui...
