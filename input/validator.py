@@ -74,25 +74,18 @@ class Map_(BaseModel):
 
     @field_validator(CONNECTIONS, mode="after")
     def UniqueConnections(cls, CONNECTIONS: list[Connections]) -> "CONNECTIONS":
-        list_: list[tuple[tuple, tuple]] = [] #bidirectional list
-        counter: int = 0
-        i: int = 1
+        pairs: list[tuple[str | str]] = [(con.HUB1, con.HUB2) for con in CONNECTIONS]
 
-        for con in CONNECTIONS:
-            tuple1 = (con.HUB1, con.HUB2)
-            tuple2 = (con.HUB2, con.HUB1)
-            list_.append((tuple1, tuple2))
+        seen = set()
 
-        for item in list_:
-            pair = item[0]
-            counter += 1
-            i = 1
-            for valores in list_:
-                if i == counter:
-                    i += 1
-                    continue
-                if pair in valores:
-                    raise ValueError("Pair or Hub Connections must be unique")
-                i += 1
+        for a, b in pairs:
+
+            pair = frozenset((a, b)) # bidirectional set
+            
+            if pair in seen:
+                raise ValueError("Pair or Hub Connections must be unique")
+
+            seen.add(pair)
+
         return CONNECTIONS
 
