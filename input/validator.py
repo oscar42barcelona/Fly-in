@@ -30,7 +30,7 @@ class Hub(BaseModel):
     TYPE: HubType = Field(alias="type", default="intermediate")
     ZONE: Zone = Field(alias="zone", default="normal")
     COLOR: str | None = Field(alias="color", default="grey")
-    MAX_DRONES: int = Field(alias="max_drones", default=1)
+    MAX_DRONES: int = Field(alias="max_drones", ge=1, default=1)
 
     @field_validator("NAME")
     @classmethod
@@ -39,6 +39,17 @@ class Hub(BaseModel):
             raise ValueError(
                 "Zone names cannot contain dashes or spaces")
         return name
+
+     @field_validator("COLOR")
+     @classmethod
+     def OneWordColor(cls, COLOR: str) -> str:
+        """color admite cualquier cadena válida de una sola palabra."""
+        if color not None:
+            color = COLOR.split()
+            if len(color) > 1:
+                raise ValueError(
+                    "Color must be a single word")
+        return COLOR
  
 
 class Connections(BaseModel):
@@ -51,10 +62,10 @@ class Connections(BaseModel):
         if self.HUB1 == self.HUB2:
             raise ValueError("A Hub cannot connect to itself :(")
         return self
-    
+
 
 class Map_(BaseModel): 
-    NB_DRONES: int = Field(alias="nb_drones", ge=1, le=100)
+    NB_DRONES: int = Field(alias="nb_drones", ge=1)
     HUBS: list[Hub] = Field(alias="Hubs", ge=3)
     START_HUB: str = Field(alias="start_hub") #hay que hacer reglas con estte.
     END_HUB: str = Field(alias="end_hub")
@@ -70,6 +81,18 @@ class Map_(BaseModel):
             if amount != 1:
                 raise ValueError(
                     f"There must be exactly one {hub_type.value} hub")
+        return HUBS
+
+    @field_validator("HUBS")
+    @classmethod
+    def UniqueHubNames(cls, HUBS: list[hub]) -> "HUBS"
+        """Cada zona tiene un nombre único."""
+        for index_hub, hub_name in enumerate(HUBS):
+            if any (node.NAME == hub_name 
+                for index_node, node in enumerate(HUBS
+                 if index_hub != index_node)
+                raise ValueError(
+                    f"Hubs name must be unique")
         return HUBS
 
     @field_validator(CONNECTIONS, mode="after")
@@ -96,6 +119,7 @@ class Map_(BaseModel):
         hub_names: list[str] = [hub.NAME for hub in self.HUBS]
         
         for name in hub_names:
-            for con in self.connections:
-                if name == con.HUB1 or name == con.HUB2:
-                    raise ValueError("Connections and hubs must coincide") #seguir por aqui...
+            if not any(name == con.HUB1 or name == con.HUB2 for con in self.CONNECTIONS)
+                raise ValueError("Connections and hubs must coincide")
+
+        return self
