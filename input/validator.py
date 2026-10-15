@@ -35,16 +35,16 @@ class Hub(BaseModel):
     @field_validator("NAME")
     @classmethod
     def valid_names(cls, NAME: str) -> str:
-        if " " in name or "-" in name:
+        if " " in NAME or "-" in NAME:
             raise ValueError(
                 "Zone names cannot contain dashes or spaces")
-        return name
+        return NAME
 
-     @field_validator("COLOR")
-     @classmethod
-     def OneWordColor(cls, COLOR: str) -> str:
+    @field_validator("COLOR")
+    @classmethod
+    def OneWordColor(cls, COLOR: str) -> str:
         """color admite cualquier cadena válida de una sola palabra."""
-        if color not None:
+        if COLOR is not None:
             color = COLOR.split()
             if len(color) > 1:
                 raise ValueError(
@@ -55,10 +55,10 @@ class Hub(BaseModel):
 class Connections(BaseModel):
     HUB1: str = Field(alias="hub1")
     HUB2: str = Field(alias="hub2")
-    LINK_CAPACITY: int | None = Field(alias="link_capacity", default=1)
+    LINK_CAPACITY: int | None = Field(alias="link_capacity", ge=1, default=1)
 
     @model_validator(mode="after")
-    def UniqueHub(self) -> "Conections"
+    def UniqueHub(self) -> "Conections":
         if self.HUB1 == self.HUB2:
             raise ValueError("A Hub cannot connect to itself :(")
         return self
@@ -66,7 +66,7 @@ class Connections(BaseModel):
 
 class Map_(BaseModel): 
     NB_DRONES: int = Field(alias="nb_drones", ge=1)
-    HUBS: list[Hub] = Field(alias="Hubs", ge=3)
+    HUBS: list[Hub] = Field(alias="Hubs", min_length=3)
     START_HUB: str = Field(alias="start_hub") #hay que hacer reglas con estte.
     END_HUB: str = Field(alias="end_hub")
     CONNECTIONS: list[Connections] = Field(alias="Connections") #hay que hacer reglas aqui tambien
@@ -74,7 +74,7 @@ class Map_(BaseModel):
 
     @field_validator("HUBS")
     @classmethod
-    def one_start_end(cls, HUBS: list[hub]) -> "HUBS"
+    def one_start_end(cls, HUBS: HUBS) -> "HUBS":
         for hub_type in (HubType.ENTRY, HubType.EXIT):
             amount = sum(node.TYPE == hub_type for node in HUBS)
 
@@ -85,18 +85,18 @@ class Map_(BaseModel):
 
     @field_validator("HUBS")
     @classmethod
-    def UniqueHubNames(cls, HUBS: list[hub]) -> "HUBS"
+    def UniqueHubNames(cls, HUBS: HUBS) -> "HUBS":
         """Cada zona tiene un nombre único."""
-        for index_hub, hub_name in enumerate(HUBS):
-            if any (node.NAME == hub_name 
-                for index_node, node in enumerate(HUBS
-                 if index_hub != index_node)
+        for index_hub, hub in enumerate(HUBS):
+            if any (node.NAME == hub.NAME
+                    for index_node, node in enumerate(HUBS)
+                    if index_hub != index_node):
                 raise ValueError(
                     f"Hubs name must be unique")
         return HUBS
 
-    @field_validator(CONNECTIONS, mode="after")
-    def UniqueConnections(cls, CONNECTIONS: list[Connections]) -> "CONNECTIONS":
+    @field_validator("CONNECTIONS")
+    def UniqueConnections(cls, CONNECTIONS) -> "CONNECTIONS":
 
         pairs: list[tuple[str | str]] = [(con.HUB1, con.HUB2) for con in CONNECTIONS]
 
@@ -113,13 +113,14 @@ class Map_(BaseModel):
 
         return CONNECTIONS
 
-    @model_validator(CONNECTIONS, mode="after")
+    @model_validator(mode="after")
     def defined_connections(self) -> "CONNECTIONS":
 
         hub_names: list[str] = [hub.NAME for hub in self.HUBS]
         
         for name in hub_names:
-            if not any(name == con.HUB1 or name == con.HUB2 for con in self.CONNECTIONS)
+            if any(con.HUB1 not in hub_names or con.HUB2 not in 
+                   hub_names for con in self.CONNECTIONS):
                 raise ValueError("Connections and hubs must coincide")
 
         return self

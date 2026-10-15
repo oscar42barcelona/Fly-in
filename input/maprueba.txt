@@ -1,6 +1,13 @@
-nb_drones: 1
+nb_drones: 4
 
+start_hub: start 0 0 [color=green]
 
-connection: start-alpha
+hub: alpha 1 0 [color=blue]
+hub: beta 2 0 [zone=restricted color=red max_drones=2]
+hub: Carlos 2 0 [color=red max_drones=2 zone=restricted]
+
+end_hub: end 3 0 [color=yellow]
+
+connection: start-Carlos
 connection: alpha-beta [max_link_capacity=1]
 connection: beta-end
