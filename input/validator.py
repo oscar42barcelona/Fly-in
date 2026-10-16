@@ -25,8 +25,8 @@ class Zone(str, Enum):
 
 class Hub(BaseModel):
     NAME: str = Field(alias="name")
-    X: int = Field(alias="x")
-    Y: int = Field(alias="y")
+    X: int = Field(alias="x", ge=0)
+    Y: int = Field(alias="y", ge=0)
     TYPE: HubType = Field(alias="type", default="intermediate")
     ZONE: Zone = Field(alias="zone", default="normal")
     COLOR: str | None = Field(alias="color", default="grey")
@@ -65,7 +65,7 @@ class Connections(BaseModel):
 
 
 class Map_(BaseModel): 
-    NB_DRONES: int = Field(alias="nb_drones", ge=1)
+    NB_DRONES: int = Field(alias="nb_drones")
     HUBS: list[Hub] = Field(alias="Hubs", min_length=3)
     START_HUB: str = Field(alias="start_hub") #hay que hacer reglas con estte.
     END_HUB: str = Field(alias="end_hub")
