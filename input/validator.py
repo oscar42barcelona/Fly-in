@@ -124,3 +124,4 @@ class Map_(BaseModel):
                 raise ValueError("Connections and hubs must coincide")
 
         return self
+

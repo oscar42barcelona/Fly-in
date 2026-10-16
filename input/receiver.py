@@ -53,7 +53,8 @@ class receiver:
 
                 if not item.__contains__('='):
                     raise ValueError(
-                    f"Line {number}: Missing '='. Content: {line}")
+                    f"Line {number}: Missing '=' or extra space."
+                    f" Content: {line}")
 
                 clave, valor = item.split('=', 1)
                 hub_dict[clave.strip()] = valor.strip()
@@ -171,6 +172,6 @@ class receiver:
             for item in error.errors():
                 print(item["loc"])
                 print(item["msg"])
-                print(item["input"])
+                #print(item["input"])
         except ValueError as error:
             print(error)
