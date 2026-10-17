@@ -3,6 +3,10 @@ from validator import Map_
 from pydantic import ValidationError
 
 class receiver:
+    index_hubs: list[int]= []
+    index_connections: list[int]= []
+    index_nbdrones: list[int]= []
+    
     def reader(self) -> list[str]:
         """Lee las líneas del archivo indicado como argumento."""
         with open(argv[1], "r") as file:
@@ -134,10 +138,12 @@ class receiver:
 
             if line.startswith("nb_drones:"):
                 mapa.update(self.FormatMap(line))
+                self.index_nbdrones.append(number)
 
             elif line.startswith(("start_hub:", "end_hub:", "hub:")):
                 hub = self.FormatHub(line, number)
                 hubs.append(hub)
+                self.index_hubs.append(number)
 
                 if line.startswith("start_hub:"):
                     mapa["start_hub"] = hub["name"]
@@ -147,6 +153,7 @@ class receiver:
             elif line.startswith("connection:"):
                 connection = self.FormatConnection(line, number)
                 connections.append(connection)
+                self.index_connections.append(number)
             else:
                 raise ValueError(
                     f"Line {number}: Unknown prefix. Content: {line}")
@@ -155,12 +162,24 @@ class receiver:
         mapa["Connections"] = connections
 
         return mapa
+
+    def context_creator(self) -> dict[str, list[int]]:
+
+        context: dict[str, list[int]] = {}
+
+        context["nb_drones"] = self.index_nbdrones
+        context["Hubs"] = self.index_hubs
+        context["Connections"] = self.index_connections
+
+        return context
     
     def Process(self) -> Map_ | None:
         try:
             list_lines: list[str] = self.reader()
             dictforpy: dict[str, object] = self.slicer(list_lines)
-            return Map_.model_validate(dictforpy)
+            Context: dict[str, list[int]] = self.context_creator()
+
+            return Map_.model_validate(dictforpy, context=Context)
 
         except IndexError as error:
             print(f"We need a map to run :)")
