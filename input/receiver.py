@@ -66,7 +66,7 @@ class receiver:
 
         if name_coord.count(' ') != 2:
             raise ValueError(
-                f"Line {number}: Missing Space. Content: {line}")
+                f"Line {number}: Missing or extra Space. Content: {line}")
 
         name, x, y = name_coord.split(' ', 2)
         hub_dict["name"] = name.strip()
@@ -174,21 +174,26 @@ class receiver:
 
         return context
 
-    def print_error(self, item: list[ErrorDetails], Context: dict[str, list[int]]):
+    def print_error(self, item: ErrorDetails, Context: dict[str, list[int]]):
         loc = item["loc"]
-        len_ = len(loc)                                     
+        len_loc = len(loc)                                   
 
-        if loc[0] == "nb_drones":
-            print(f"Error in line: {Context[loc[0]]}", end=". ")
-        elif len_ > 1:
-            print(f"Error in line: {Context[loc[0]][loc[1]]}", end=". ")
-
+        if loc and loc[0] == "nb_drones":
+            print(f"Error in {loc} line: {Context[loc[0]]}", end=". ")
+        elif item["type"] == "custom_validation_error": 
+            ctx = item["ctx"]
+            clave, valor = next(iter(ctx.items()))
+            if loc:
+                print(f"Error in {loc} line: {Context[clave][valor]}", end=". ")
+            else:
+                print(f"Error in line: {Context[clave][valor]}", end=". ")
+        elif len_loc > 1:
+            print(f"Error in {loc} line: {Context[loc[0]][loc[1]]}", end=". ")
+        
         print(item["msg"])
-        print(loc)
         #print(item["input"])
     
         
-    
     def Process(self) -> Map_ | None:
         try:
             list_lines: list[str] = self.reader()

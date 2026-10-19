@@ -76,11 +76,16 @@ class Map_(BaseModel):
     @classmethod
     def one_start_end(cls, HUBS: HUBS) -> "HUBS":
         for hub_type in (HubType.ENTRY, HubType.EXIT):
-            amount = sum(node.TYPE == hub_type for node in HUBS)
+            amount = 0
 
-            if amount != 1:
-                raise ValueError(
-                    f"There must be exactly one {hub_type.value} hub")
+            for index , node in enumerate(HUBS):
+                if node.TYPE == hub_type:
+                    amount += 1
+
+                if amount == 2:
+                    raise PydanticCustomError("custom_validation_error", 
+                                        f"There must be exactly one {hub_type.value} hub",
+                                        {"Hubs": index})
         return HUBS
 
     @field_validator("HUBS")
@@ -88,29 +93,28 @@ class Map_(BaseModel):
     def UniqueHubNames(cls, HUBS: HUBS) -> "HUBS":
         """Cada zona tiene un nombre único."""
         for index_hub, hub in enumerate(HUBS):
-            if any (node.NAME == hub.NAME
-                    for index_node, node in enumerate(HUBS)
-                    if index_hub != index_node):
-                raise ValueError(
-                    f"Hubs name must be unique")
+            for index_node, node in enumerate(HUBS):
+                if node.NAME == hub.NAME and index_hub != index_node:
+                    raise PydanticCustomError("custom_validation_error", 
+                                            "Hubs name must be unique",
+                                            {"Hubs": index_node})
         return HUBS
 
     @field_validator("CONNECTIONS")
     def UniqueConnections(cls, CONNECTIONS) -> "CONNECTIONS":
 
-        pairs: list[tuple[str | str]] = [(con.HUB1, con.HUB2) for con in CONNECTIONS]
+        pairs: list[tuple[str]] = [(con.HUB1, con.HUB2) for con in CONNECTIONS]
 
         seen = set()
 
-        for index, a, b in enumerate(pairs):
-
+        for index, tuple in enumerate(pairs):
+            a, b = tuple   
             pair = frozenset((a, b)) # bidirectional set
             
             if pair in seen:
-                raise PydanticCustomError("Repeated Hubs", 
+                raise PydanticCustomError("custom_validation_error", 
                                           "Pair or Hub Connections must be unique",
-                                          f"Connections: {index}")
-
+                                          {"Connections": index})
             seen.add(pair)
 
         return CONNECTIONS
@@ -120,10 +124,12 @@ class Map_(BaseModel):
 
         hub_names: list[str] = [hub.NAME for hub in self.HUBS]
         
-        for name in hub_names:
-            if any(con.HUB1 not in hub_names or con.HUB2 not in 
-                   hub_names for con in self.CONNECTIONS):
-                raise ValueError("Connections and hubs must coincide")
+        #for index, name in enumerate(hub_names):
+        for index, con in enumerate(self.CONNECTIONS):
+            if con.HUB1 not in hub_names or con.HUB2 not in hub_names:
+                raise PydanticCustomError("custom_validation_error", 
+                                        "Connections and hubs must coincide",
+                                        {"Connections": index})
 
         return self
 
