@@ -1,6 +1,7 @@
 from sys import argv
 from validator import Map_
 from pydantic import ValidationError
+from pydantic_core import ErrorDetails
 
 class receiver:
     index_hubs: list[int]= []
@@ -172,6 +173,21 @@ class receiver:
         context["Connections"] = self.index_connections
 
         return context
+
+    def print_error(self, item: list[ErrorDetails], Context: dict[str, list[int]]):
+        loc = item["loc"]
+        len_ = len(loc)                                     
+
+        if loc[0] == "nb_drones":
+            print(f"Error in line: {Context[loc[0]]}", end=". ")
+        elif len_ > 1:
+            print(f"Error in line: {Context[loc[0]][loc[1]]}", end=". ")
+
+        print(item["msg"])
+        print(loc)
+        #print(item["input"])
+    
+        
     
     def Process(self) -> Map_ | None:
         try:
@@ -189,8 +205,6 @@ class receiver:
             print(error)
         except ValidationError as error:
             for item in error.errors():
-                print(item["loc"])
-                print(item["msg"])
-                #print(item["input"])
+                self.print_error(item, Context)
         except ValueError as error:
             print(error)

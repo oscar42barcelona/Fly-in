@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, ValidationError, model_validator, field_validator, ConfigDict
+from pydantic import BaseModel, Field, ValidationError, model_validator, field_validator
+from pydantic_core import PydanticCustomError
 from enum import Enum
 
 
@@ -21,7 +22,6 @@ class Zone(str, Enum):
         objeto._value_ = text
         objeto.cost = cost
         return objeto
-
 
 class Hub(BaseModel):
     NAME: str = Field(alias="name")
@@ -65,7 +65,7 @@ class Connections(BaseModel):
 
 
 class Map_(BaseModel): 
-    NB_DRONES: int = Field(alias="nb_drones")
+    NB_DRONES: int = Field(alias="nb_drones", ge=1)
     HUBS: list[Hub] = Field(alias="Hubs", min_length=3)
     START_HUB: str = Field(alias="start_hub") #hay que hacer reglas con estte.
     END_HUB: str = Field(alias="end_hub")
@@ -102,12 +102,14 @@ class Map_(BaseModel):
 
         seen = set()
 
-        for a, b in pairs:
+        for index, a, b in enumerate(pairs):
 
             pair = frozenset((a, b)) # bidirectional set
             
             if pair in seen:
-                raise ValueError("Pair or Hub Connections must be unique")
+                raise PydanticCustomError("Repeated Hubs", 
+                                          "Pair or Hub Connections must be unique",
+                                          f"Connections: {index}")
 
             seen.add(pair)
 
