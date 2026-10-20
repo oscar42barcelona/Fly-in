@@ -63,7 +63,6 @@ class Connections(BaseModel):
             raise ValueError("A Hub cannot connect to itself :(")
         return self
 
-
 class Map_(BaseModel): 
     NB_DRONES: int = Field(alias="nb_drones", ge=1)
     HUBS: list[Hub] = Field(alias="Hubs", min_length=3)
@@ -92,12 +91,14 @@ class Map_(BaseModel):
     @classmethod
     def UniqueHubNames(cls, HUBS: HUBS) -> "HUBS":
         """Cada zona tiene un nombre único."""
-        for index_hub, hub in enumerate(HUBS):
-            for index_node, node in enumerate(HUBS):
-                if node.NAME == hub.NAME and index_hub != index_node:
-                    raise PydanticCustomError("custom_validation_error", 
-                                            "Hubs name must be unique",
-                                            {"Hubs": index_node})
+        seen = set()
+
+        for index, node in enumerate(HUBS):
+            if node.NAME in seen:
+                raise PydanticCustomError("custom_validation_error", 
+                                           "Hubs name must be unique",
+                                           {"Hubs": index})
+            seen.add(node.NAME)
         return HUBS
 
     @field_validator("CONNECTIONS")
