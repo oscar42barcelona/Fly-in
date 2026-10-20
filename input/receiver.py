@@ -29,6 +29,7 @@ class receiver:
     def FormatHub(self, line: str, number: int) -> dict[str, int | str]:
         """Formatea una línea de hub, inicio o destino."""
         hub_dict: dict[str, int | str] = {}
+        seen = set()        
 
         if not line.__contains__(':'):
             raise ValueError(
@@ -62,6 +63,13 @@ class receiver:
                     f" Content: {line}")
 
                 clave, valor = item.split('=', 1)
+                if clave in seen:
+                    raise ValueError(
+                        f"Line {number}: Non repeated features, please :)"
+                        f"Content: {line}")
+
+                seen.add(clave)
+
                 hub_dict[clave.strip()] = valor.strip()
 
         if name_coord.count(' ') != 2:
