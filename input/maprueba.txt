@@ -2,15 +2,15 @@ nb_drones: 1
 
 start_hub: start 0 0 [color=green]
 
-hub: alpha 1 0 [color=blue]
-hub: beta 2 4 [zone=restricted color=red max_drones=2]
-hub: alfil 2 0 [color=red max_drones=2 zone=restricted color=green]
+hub: alpha 1 0 [color=blue zone=normal]
 
-end_hub: end 3 0 [color=yellow]
+hub: alfil 2 8 [color=red max_drones=1 zone=restricted]
 
-
-
+end_hub: end 3 0 [color=yellow
 
 connection: start-alpha
-connection: alpha-beta [max_link_capacity=3]
+
+connection: alpha-beta [max_link_capacity=2]
+hub: beta 2 0 [color=red max_drones=2 zone=restricted]
+
 connection: beta-end

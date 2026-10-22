@@ -29,7 +29,8 @@ class receiver:
     def FormatHub(self, line: str, number: int) -> dict[str, int | str]:
         """Formatea una línea de hub, inicio o destino."""
         hub_dict: dict[str, int | str] = {}
-        seen = set()        
+        seen = set()
+        meta_hub: list[str] = ["color", "max_drones", "zone"]
 
         if not line.__contains__(':'):
             raise ValueError(
@@ -63,9 +64,15 @@ class receiver:
                     f" Content: {line}")
 
                 clave, valor = item.split('=', 1)
+
+                if not clave in meta_hub:
+                    raise ValueError(
+                    f"Line {number}: wrong spelling :(."
+                    f" Content: {line}")                
+
                 if clave in seen:
                     raise ValueError(
-                        f"Line {number}: Non repeated features, please :)"
+                        f"Line {number}: Non repeated features, please :) "
                         f"Content: {line}")
 
                 seen.add(clave)
@@ -87,6 +94,7 @@ class receiver:
     def FormatConnection(self, line: str, number: int) -> dict[str, int | str]:
         """Formatea una línea de conexión."""
         connections_dict: dict[str, int | str] = {}
+        seen = set()
 
         if not line.__contains__(':'):
             raise ValueError(
@@ -104,14 +112,23 @@ class receiver:
                 raise ValueError(
                     f"Line {number}: Missing ']'. Content: {line}")
 
-            link_capacity = link_capacity[:-1]
+            link_capacity = link_capacity[:-1].strip()
+            if link_capacity.count(" "):
+                raise ValueError(
+                f"Line {number}: Extra Space or args. Content: {line}")
 
             if not link_capacity.__contains__('='):
                     raise ValueError(
                     f"Line {number}: Missing '='. Content: {line}")
 
-            link_capacity = link_capacity.split('=', 1)[1].strip()
-            connections_dict["link_capacity"] = link_capacity
+            key_capacity, value_capacity = link_capacity.split('=', 1)
+            
+            if not key_capacity.startswith("max_link_capacity"):
+                    raise ValueError(
+                    f"Line {number}: wrong spelling :(."
+                    f" Content: {line}")
+
+            connections_dict[key_capacity.strip()] = link_capacity.strip()
 
         connections = connections.strip()
 
@@ -137,7 +154,7 @@ class receiver:
 
             if number == 1 and not line.startswith("nb_drones:"):
                 raise ValueError(
-                    f"Line {number}: Nb_drones must be at the very",
+                    f"Line {number}: Nb_drones must be at the very "
                     f"first_line. Content: {line}")
 
             line = line.split("#", 1)[0].strip()
