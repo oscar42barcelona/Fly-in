@@ -1,6 +1,8 @@
-#import Drone, la libreria de range, import Node, Connection, Graph, Node
+from .Drone import Drone
+from .Map import Node, Connection, Drone, Graph
+from input.validator import Map_, Connection, Hub
 
-class Factory()
+class Factory():
     self.drone_id: int = 0
 
     def create_drone(self, start_node: Node) -> Drone:
@@ -13,7 +15,7 @@ class Factory()
         
         for _ in range(nb_drones):
 
-            drone = self.create_drone(start_node: Node)
+            drone = self.create_drone(start_node)
             drone_list.append(drone)
     
         return drone_list
@@ -53,7 +55,7 @@ class Factory()
                             ) -> list[connection]:
         connection_list: list[Connection] = []        
 
-        for connection i connect_list:
+        for connection in connect_list:
             con = self.create_connection(connection, node_list)
             connection_list.append(con)
 

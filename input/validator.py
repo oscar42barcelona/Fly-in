@@ -52,13 +52,13 @@ class Hub(BaseModel):
         return COLOR
  
 
-class Connections(BaseModel):
+class Connection(BaseModel):
     HUB1: str = Field(alias="hub1")
     HUB2: str = Field(alias="hub2")
     LINK_CAPACITY: int | None = Field(alias="link_capacity", ge=1, default=1)
 
     @model_validator(mode="after")
-    def UniqueHub(self) -> "Conections":
+    def UniqueHub(self) -> "Conection":
         if self.HUB1 == self.HUB2:
             raise ValueError("A Hub cannot connect to itself :(")
         return self
@@ -68,7 +68,7 @@ class Map_(BaseModel):
     HUBS: list[Hub] = Field(alias="Hubs", min_length=3)
     START_HUB: str = Field(alias="start_hub") #hay que hacer reglas con estte.
     END_HUB: str = Field(alias="end_hub")
-    CONNECTIONS: list[Connections] = Field(alias="Connections") #hay que hacer reglas aqui tambien
+    CONNECTIONS: list[Connection] = Field(alias="Connections") #hay que hacer reglas aqui tambien
 
 
     @field_validator("HUBS")

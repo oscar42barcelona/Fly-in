@@ -1,6 +1,6 @@
 class Drone:
     def __init__(self, id_: int,
-                start_node: Node)
+                start_node: Node):
         self.id = id_
         self.current_node | None = start_node
         self.current_connection: Connection | None = None

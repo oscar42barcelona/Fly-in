@@ -4,4 +4,4 @@ from validator import Map_
 control = receiver()
 dicforpy = control.Process()
 if dicforpy:  
-    modelopy = Map_.model_validate(dicforpy, extra="forbid")
+    modelo_py = Map_.model_validate(dicforpy, extra="forbid")

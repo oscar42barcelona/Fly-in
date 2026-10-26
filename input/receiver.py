@@ -1,5 +1,5 @@
 from sys import argv
-from validator import Map_
+from .validator import Map_
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
