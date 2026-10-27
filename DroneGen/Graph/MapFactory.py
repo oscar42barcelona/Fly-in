@@ -1,9 +1,10 @@
-from .Drone import Drone
 from .Map import Node, Connection, Drone, Graph
-from input.validator import Map_, Connection, Hub
+from input.validator import Map_, Hub
+from input.validator import Connection as VConnection
+from .Drone import Drone
 
 class Factory():
-    self.drone_id: int = 0
+    drone_id: int = 0
 
     def create_drone(self, start_node: Node) -> Drone:
         self.drone_id += 1
@@ -24,17 +25,19 @@ class Factory():
         """crear instancias Node a partir de los datos 
         validados de cada hub."""
         return Node(name=hub.NAME, x=hub.X,
-                    y=hub.y, zone_type=hub.type, 
+                    y=hub.Y, zone_type=hub.TYPE, 
                     color=hub.COLOR,
-                    max_drones=hub.MAX)
+                    max_drones=hub.MAX_DRONES)
 
-    def create_nodes(self, node_list: HUBS) -> list[Node]:
+    def create_nodes(self, node_list: list[Hub]) -> list[Node]:
         """crear una lista de instancias Node a partir de los datos 
         validados de cada hub."""
-        node_list: list[Node] = []
+        list_nodes: list[Node] = []
 
         for hub in node_list:
-            node_list.append(self.create_node(hub))
+            list_nodes.append(self.create_node(hub))
+
+        return list_nodes
 
     def create_connection(self, 
                         connection: Connection,
@@ -46,13 +49,13 @@ class Factory():
             elif node.name == connection.HUB2:
                 node_B = node
         
-        return Connection(node_a=Node_A,
-                 node_b=Node_B,
+        return Connection(node_a=node_A,
+                 node_b=node_B,
                  max_link_capacity=connection.LINK_CAPACITY)
 
-    def create_connections(self, connect_list: Connections, 
+    def create_connections(self, connect_list: Connection, 
                             node_list: list[Node]
-                            ) -> list[connection]:
+                            ) -> list[Connection]:
         connection_list: list[Connection] = []        
 
         for connection in connect_list:
@@ -61,8 +64,8 @@ class Factory():
 
         return connection_list
                     
-    def create_graph(self, hubs: Hubs, 
-                    connections: Connections) -> Graph:
+    def create_graph(self, hubs: Hub, 
+                    connections: list[Connection]) -> Graph:
         """organizar la creación de todos los nodos, 
             luego las conexiones y 
             devolver Graph completo. """

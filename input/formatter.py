@@ -14,19 +14,16 @@ if dicforpy:
 
 
 #En primer lugar instancio factory
-factory = factory()
+factory = Factory()
 
 #En segundo lugar vemos que bola
 graph = factory.create_graph(hubs=modelo_py.HUBS, 
-                            connections=modelo_py)
+                            connections=modelo_py.CONNECTIONS)
 
-print("\n=== GRAPH ===")
+print("=== NODES ===")
+for node in graph.nodes:
+    print(vars(node))
 
-for name, value in vars(graph).items():
-    print(f"\n{name}:")
-
-    if isinstance(value, list):
-        print(f"Total: {len(value)}")
-
-        for i, obj in enumerate(value, start=1):
-            print(f"\n  Elemento {i}:")
+print("\n=== CONNECTIONS ===")
+for connection in graph.connections:
+    print(vars(connection))

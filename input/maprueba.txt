@@ -6,7 +6,7 @@ hub: alpha 1 0 [color=blue zone=normal]
 
 hub: alfil 2 8 [color=red max_drones=1 zone=restricted]
 
-end_hub: end 3 0 [color=yellow
+end_hub: end 3 0 [color=yellow]
 
 connection: start-alpha
 
