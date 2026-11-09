@@ -20,6 +20,9 @@ factory = Factory()
 graph = factory.create_graph(hubs=modelo_py.HUBS, 
                             connections=modelo_py.CONNECTIONS)
 
+drones_list = factory.create_drones(nb_drones=modelo_py.NB_DRONES,
+                                    start_node=modelo_py.START_HUB)
+
 print("=== NODES ===")
 for node in graph.nodes:
     print(vars(node))
@@ -27,3 +30,7 @@ for node in graph.nodes:
 print("\n=== CONNECTIONS ===")
 for connection in graph.connections:
     print(vars(connection))
+
+print("\n=== Drones ===")
+for drone in drones_list:
+    print(vars(drone))
