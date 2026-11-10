@@ -59,4 +59,5 @@ class Algorithm(flygorithm):
             """Esto en teoria es hasta encontrar la primera ruta
             Aqui tenemos que guardar el coste y hacer otro bucle a ver 
             si podemos optimizar las rutas y 
-            me interesa en realidad guarda todas las rutas"""
+            me interesa en realidad guarda todas las rutas
+            Como guardo las rutas?"""
