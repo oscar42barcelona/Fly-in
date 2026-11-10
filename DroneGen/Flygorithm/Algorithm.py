@@ -35,6 +35,7 @@ class Algorithm(flygorithm):
             graph: Graph) -> dict[int, list[MovementRecord]]:
 
         heap = []
+        node_list: list[Node]
 
         cumulative_cost: int
 
@@ -56,8 +57,10 @@ class Algorithm(flygorithm):
                     heappush(heap, (cumulative_cost, node.zone.priority, node.name, node))
 
             cumulative_cost, _, _, next_node = heappop(heap)
+
             """Esto en teoria es hasta encontrar la primera ruta
             Aqui tenemos que guardar el coste y hacer otro bucle a ver 
             si podemos optimizar las rutas y 
             me interesa en realidad guarda todas las rutas
-            Como guardo las rutas?"""
+            Como guardo las rutas?
+            Como reconstruyo las rutas?"""
