@@ -31,7 +31,7 @@ class Algorithm(flygorithm):
         if next_node.enter_drone(drone) is False:
             """habria que ir a otro nodo no"""
 
-    def first_drone_djikstra(self, drone: Drone,
+    def djikstra_route_finding(self, drone: Drone,
             graph: Graph) -> dict[int, list[MovementRecord]]:
 
         heap = []
@@ -41,9 +41,11 @@ class Algorithm(flygorithm):
 
         next_node = drone.current_node
 
+        node_list.append(next_node)
+
         while next_node != "goal":
-        
-            connection_list: list[Node] = graph.get_connections(next_node)
+
+            connection_list = [node for node in graph.get_connections(next_node) if node not in node_list]
 
             for node in connection_list:
 
@@ -53,10 +55,36 @@ class Algorithm(flygorithm):
                         cumulative_cost = node.zone.cost
                     else:
                         cumulative_cost = node.zone.cost + cumulative_cost
-    
-                    heappush(heap, (cumulative_cost, node.zone.priority, node.name, node))
 
-            cumulative_cost, _, _, next_node = heappop(heap)
+                    comprob = self.comprob_menor_coste(heap, node, cumulative_cost)
+
+                    if comprob[0]:
+                        if not comprob[1]:
+                            continue
+                        heap.remove[comprob[1]]
+                         
+                    heappush(heap, (cumulative_cost, node.zone.priority, node.name, node, node_list))
+
+            cumulative_cost, _, _, next_node, node_list = heappop(heap)
+
+            node_list.append(next_node)
+
+        
+    def comprob_menor_coste(self, heap, node, cumulative_cost) -> (bool, int):
+
+        for index, tupla in enumerate(heap):
+            if node in tupla[3]:
+
+                 if tupla[0] < cumulative_cost:
+                    return (True, 0)
+
+                elif tupla[0] >= cumulative_cost:
+                    return (True, index)
+            else:
+                return (False, 0)
+                
+        
+
 
             """Esto en teoria es hasta encontrar la primera ruta
             Aqui tenemos que guardar el coste y hacer otro bucle a ver 
