@@ -34,12 +34,12 @@ class Algorithm(flygorithm):
                     else:
                         cumulative_cost = node.zone.cost + cumulative_cost
 
-                    comprob = self.comprob_menor_coste(heap, node, cumulative_cost)
+                    flag, index = self.comprob_menor_coste(heap, node, cumulative_cost)
 
-                    if comprob[0]:
-                        if not comprob[1]:
+                    if flag:
+                        if not index:
                             continue
-                        heap.remove[comprob[1]]
+                        heap.remove[index]
                          
                     heappush(heap, (cumulative_cost, node.zone.priority, node.name, node, node_list))
 
@@ -50,8 +50,10 @@ class Algorithm(flygorithm):
         return node_list
 
         
-    def comprob_menor_coste(self, heap, node, cumulative_cost) -> (bool, int):
+    def comprob_menor_coste(self, heap, node, cumulative_cost) -> tuple[bool, int]:
 
+        if not heap:
+            return (False, 0)
         for index, tupla in enumerate(heap):
             if node in tupla[3]:
 
