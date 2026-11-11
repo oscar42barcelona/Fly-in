@@ -16,6 +16,7 @@ class Node:
         self.COLOR = color
         self.capacity = max_drones
         self.drones: list[Drone]
+        self.Cumulative_cost: int = 0
 
     def enter_drone(self, drone: Drone) -> bool:
         """registrar la presencia de un dron en el nodo."""
@@ -110,6 +111,11 @@ class Graph:
         self.nodes = nodes
         self.connections = connections
 
-    def get_connections(node) -> list[Connection]:
-        """obtener todas las conexiones de un nodo."""
+    def get_connections(self, node: Node) -> list[Node]:
+        list_nodes: list[Node] = []
 
+        for connection in self.connections:
+            if node == connection.node_a:
+                list_nodes.append(connection.node_b)
+            elif node == connection.node_b:
+                list_nodes.append(connection.node_a)

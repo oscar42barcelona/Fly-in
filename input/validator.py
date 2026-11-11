@@ -12,15 +12,20 @@ class HubType(str, Enum):
 class Zone(str, Enum):
     cost: int | None
     
-    NORMAL = ("normal", 1)
-    BLOCKED = ("blocked", None)
-    RESTRICTED = ("restricted", 2)
-    PRIORITY = ("priority", 1)
+    NORMAL = ("normal", 1, 1)
+    BLOCKED = ("blocked", None, 3)
+    RESTRICTED = ("restricted", 2, 2)
+    PRIORITY = ("priority", 1, 0)
 
-    def __new__(cls, text: str, cost: int | None) -> "Zone":
+    def __new__(cls, text: str,
+         cost: int | None,
+          priority: int) -> "Zone":
+
         objeto = str.__new__(cls, text)
         objeto._value_ = text
         objeto.cost = cost
+        objeto.priority = priority
+
         return objeto
 
 class Hub(BaseModel):
