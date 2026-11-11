@@ -19,8 +19,6 @@ class Algorithm(flygorithm):
 
         next_node = drone.current_node
 
-        node_list.append(next_node)
-
         while next_node.name != "goal":
 
             connection_list = [node for node in graph.get_connections(next_node) if node not in node_list]
@@ -29,7 +27,7 @@ class Algorithm(flygorithm):
 
                 if node.zone.cost is not None:
 
-                    if next_node.name == "start":
+                    if next_node.type == "entry":
                         cumulative_cost = node.zone.cost
                     else:
                         cumulative_cost = node.zone.cost + cumulative_cost
@@ -43,9 +41,10 @@ class Algorithm(flygorithm):
                          
                     heappush(heap, (cumulative_cost, node.zone.priority, node.name, node, node_list))
 
-                cumulative_cost, _, _, next_node, node_list = heappop(heap)
+            cumulative_cost, _, _, next_node, node_list = heappop(heap)
 
-                node_list.append(next_node)
+            node_list.append(next_node)
+
 
         return node_list
 
@@ -55,12 +54,12 @@ class Algorithm(flygorithm):
         if not heap:
             return (False, 0)
         for index, tupla in enumerate(heap):
-            if node in tupla[3]:
+            if node == tupla[3]:
 
                 if tupla[0] < cumulative_cost:
                     return (True, 0)
 
-                elif tupla[0] >= cumulative_cost:
+                else:
                     return (True, index)
             else:
                 return (False, 0)

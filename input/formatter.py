@@ -23,11 +23,7 @@ factory = Factory()
 graph = factory.create_graph(hubs=modelo_py.HUBS, 
                             connections=modelo_py.CONNECTIONS)
 
-for node in graph.nodes:
-    print(node.name, repr(node.zone), type(node.zone))
 
-
-"""
 for node in graph.nodes:
      if node.type == "entry":
         start = node
@@ -45,7 +41,7 @@ for node in solution_route:
 
 
 
-
+"""
 
 print("=== NODES ===")
 for node in graph.nodes:
