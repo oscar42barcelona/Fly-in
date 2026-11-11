@@ -33,7 +33,7 @@ class Hub(BaseModel):
     X: int = Field(alias="x", ge=0)
     Y: int = Field(alias="y", ge=0)
     TYPE: HubType = Field(alias="type", default="intermediate")
-    ZONE: Zone = Field(alias="zone", default="normal")
+    ZONE: Zone = Field(alias="zone", default=Zone.NORMAL)
     COLOR: str | None = Field(alias="color", default="grey")
     MAX_DRONES: int = Field(alias="max_drones", ge=1, default=1)
 
