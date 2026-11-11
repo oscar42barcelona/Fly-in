@@ -1,24 +1,26 @@
-from input.validator import Zone
+from input.validator import Zone, HubType
 from .Drone import Drone
 
 
 class Node:
     def __init__(self, name: str,
                 x: int, y: int,
-                zone_type: Zone,
+                hub_type: HubType,
+                zone: Zone,
                 color: str,
                 max_drones: int
                 ):
         self.name = name
         self.x = x
         self.y = y
-        self.zone = zone_type
+        self.type = hub_type
+        self.zone = zone
         self.COLOR = color
         self.capacity = max_drones
         self.drones: list[Drone]
-        self.Cumulative_cost: int = 0
+        #self.cumulative_cost = 0 noseeeeeeeeeeeee
 
-    def enter_drone(self, drone: Drone) -> bool:
+    def enter_drone(self, drone: Drone, previous_node: Drone) -> bool:
         """registrar la presencia de un dron en el nodo."""
 
         if len(self.drones) == self.capacity:
@@ -26,8 +28,14 @@ class Node:
         #pendiente precisar duplicados, 
         #nodos bloqueados, 
         #restricciones y tratamiento de inicio/final.
-
+        
         self.drones.append(drone)
+
+        """if previous_drone.name == "start":
+            self.cumulative_cost = self.zone.cost
+        else:
+            self.cumulative_cost = cumulative_cost + previous_drone.cost"""
+
         return True
 
     def exit_node(self, drone: Drone) -> bool:
@@ -119,3 +127,4 @@ class Graph:
                 list_nodes.append(connection.node_b)
             elif node == connection.node_b:
                 list_nodes.append(connection.node_a)
+        return list_nodes

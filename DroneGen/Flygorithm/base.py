@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from ..Graph.Drone import Drone
 from ..Graph.Map import Graph
 from enum import Enum
@@ -31,6 +31,7 @@ class MovementRecord:
 class flygorithm(ABC):
     """Este algorimto debe de encargarse de transportar
         los drones desde start_hub hasta end_hub"""
+
     @abstractmethod
     def solve(drones: list[Drone], graph: Graph) -> dict[int, list[MovementRecord]]:
         """Parametros:
@@ -42,4 +43,4 @@ class flygorithm(ABC):
         error:
             si no existe una ruta posible desde el inicio hasta el destino
         """
-        ...
+        pass

@@ -25,7 +25,8 @@ class Factory():
         """crear instancias Node a partir de los datos 
         validados de cada hub."""
         return Node(name=hub.NAME, x=hub.X,
-                    y=hub.Y, zone_type=hub.TYPE, 
+                    y=hub.Y, hub_type=hub.TYPE,
+                    zone=hub.ZONE,
                     color=hub.COLOR,
                     max_drones=hub.MAX_DRONES)
 
