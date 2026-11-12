@@ -36,8 +36,18 @@ drone = drones_list[0]
 solution_route = alg.djikstra_route_finding(drone, graph)
 
 print("\n=== Solution ===")
-for node in solution_route:
-    print(node.name)
+
+for i, entry in enumerate(solution_route, start=1):
+    cost, priority, counter, node, tuple_list = entry
+
+    if node.name != "goal":
+        continue
+
+    complete_route = tuple_list + (node,)
+
+    print(f"\nRuta {i}")
+    print(f"Coste: {cost}")
+    print("Recorrido:", " -> ".join(n.name for n in complete_route))
 
 
 
