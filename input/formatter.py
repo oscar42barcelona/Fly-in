@@ -37,7 +37,7 @@ solution_route = alg.djikstra_route_finding(drone, graph)
 
 print("\n=== Solution ===")
 for node in solution_route:
-    print(vars(node))
+    print(node.name)
 
 
 

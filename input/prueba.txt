@@ -1,59 +1,25 @@
-nb_drones: 12
+nb_drones: 2
 
-start_hub: hub 0 5 [color=green]
-end_hub: goal 20 5 [color=yellow]
+start_hub: hub 0 3 [color=green]
+end_hub: goal 10 3 [color=yellow]
 
-hub: a1 2 8 [zone=normal color=blue]
-hub: a2 5 9 [zone=priority color=green max_drones=2]
-hub: a3 8 8 [zone=restricted color=red]
-hub: a4 11 9 [zone=normal color=blue]
-hub: a5 15 8 [zone=priority color=green max_drones=2]
-hub: a6 18 8 [zone=normal color=blue]
+hub: a 2 5 [zone=normal color=blue]
+hub: b 2 1 [zone=priority color=green]
+hub: c 4 5 [zone=restricted color=red]
+hub: d 4 3 [zone=normal color=blue]
+hub: e 4 1 [zone=normal color=blue]
+hub: f 7 5 [zone=priority color=green max_drones=2]
+hub: g 7 1 [zone=normal color=blue]
 
-hub: b1 2 5 [zone=normal color=blue max_drones=2]
-hub: b2 5 5 [zone=restricted color=red]
-hub: b3 8 5 [zone=normal color=blue]
-hub: b4 11 5 [zone=priority color=green max_drones=3]
-hub: b5 15 5 [zone=restricted color=red]
-hub: b6 18 5 [zone=normal color=blue]
-
-hub: c1 2 2 [zone=priority color=green]
-hub: c2 5 1 [zone=normal color=blue]
-hub: c3 8 2 [zone=blocked color=gray]
-hub: c4 11 1 [zone=normal color=blue]
-hub: c5 15 2 [zone=normal color=blue max_drones=2]
-hub: c6 18 2 [zone=priority color=green]
-
-connection: hub-a1
-connection: hub-b1 [max_link_capacity=2]
-connection: hub-c1
-connection: a1-a2
-connection: a2-a3
-connection: a3-a4
-connection: a4-a5
-connection: a5-a6 [max_link_capacity=2]
-connection: a6-goal
-connection: b1-b2
-connection: b2-b3
-connection: b3-b4 [max_link_capacity=2]
-connection: b4-b5
-connection: b5-b6
-connection: b6-goal
-connection: c1-c2
-connection: c2-c3
-connection: c3-c4
-connection: c4-c5
-connection: c5-c6
-connection: c6-goal
-connection: a1-b1
-connection: a2-b2
-connection: a3-b3
-connection: a4-b4
-connection: a5-b5
-connection: a6-b6
-connection: b1-c1
-connection: b2-c2
-connection: b3-c3
-connection: b4-c4
-connection: b5-c5
-connection: b6-c6
+connection: hub-a
+connection: hub-b
+connection: hub-d
+connection: a-c
+connection: a-d
+connection: b-d
+connection: b-e
+connection: c-f
+connection: d-e
+connection: d-f
+connection: e-g
+connection: f-goal
