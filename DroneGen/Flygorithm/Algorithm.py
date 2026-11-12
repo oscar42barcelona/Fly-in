@@ -10,42 +10,53 @@ class Algorithm(flygorithm):
     def solve(self, drone: Drone, graph: Graph) -> dict[int, list[MovementRecord]]:
         ...
 
-    def djikstra_route_finding(self, drone: Drone,
-            graph: Graph):
+    
+    def djikstra_route_finding(self, drone: Drone, graph: Graph):
 
         heap = []
-
         contador = count()
-
-        node_list: list[Node] = []
-
-        cumulative_cost: int = 0
+        goal_routes = []
 
         next_node = drone.current_node
-
         tuple_list = (next_node,)
 
-        while next_node.name != "goal":
+        heappush(heap, (
+            0,
+            next_node.zone.priority,
+            next(contador),
+            next_node,
+            tuple_list
+        ))
 
-            connection_list = [node for node in graph.get_connections(next_node) if node not in tuple_list]
+        while heap:
+
+            previous_cost, _, _, next_node, tuple_list = heappop(heap)
+
+            if next_node.name == "goal":
+                goal_routes.append((previous_cost, tuple_list))
+                continue
+
+            connection_list = [
+                node
+                for node in graph.get_connections(next_node)
+                if node not in tuple_list
+                ]
 
             for node in connection_list:
 
                 if node.zone.cost is not None:
 
-                    if next_node.type == "entry":
-                        cumulative_cost = node.zone.cost
-                    else:
-                        cumulative_cost = node.zone.cost + previous_cost
-                         
-                    heappush(heap, (cumulative_cost, node.zone.priority, next(contador), node, tuple_list))
+                    cumulative_cost = previous_cost + node.zone.cost
 
-            previous_cost, _, _, next_node, previous_tuple = heappop(heap)
+                    heappush(heap, (
+                        cumulative_cost,
+                        node.zone.priority,
+                        next(contador),
+                        node,
+                        tuple_list + (node,)
+                    ))
 
-            tuple_list = (previous_tuple + (next_node,))
-
-
-        return heap
+        return goal_routes
 
         
     def comprob_menor_coste(self, heap, node, cumulative_cost) -> tuple[bool, int | None]:
