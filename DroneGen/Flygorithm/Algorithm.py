@@ -19,9 +19,11 @@ class Algorithm(flygorithm):
 
         next_node = drone.current_node
 
+        tuple_list = (next_node,)
+
         while next_node.name != "goal":
 
-            connection_list = [node for node in graph.get_connections(next_node) if node not in node_list]
+            connection_list = [node for node in graph.get_connections(next_node) if node not in tuple_list]
 
             for node in connection_list:
 
@@ -30,26 +32,28 @@ class Algorithm(flygorithm):
                     if next_node.type == "entry":
                         cumulative_cost = node.zone.cost
                     else:
-                        cumulative_cost = node.zone.cost + cumulative_cost
+                        cumulative_cost = node.zone.cost + previous_cost
 
                     flag, index = self.comprob_menor_coste(heap, node, cumulative_cost)
 
                     if flag:
                         if not index:
                             continue
-                        heap.remove[index]
+                        heap.pop(index)
+
+                        heapify(heap)
                          
-                    heappush(heap, (cumulative_cost, node.zone.priority, node.name, node, node_list))
+                    heappush(heap, (cumulative_cost, node.zone.priority, node.name, node, tuple_list))
 
-            cumulative_cost, _, _, next_node, node_list = heappop(heap)
+            previous_cost, _, _, next_node, previous_tuple = heappop(heap)
 
-            node_list.append(next_node)
+            tuple_list = (previous_tuple + (next_node,))
 
 
-        return node_list
+        return tuple_list
 
         
-    def comprob_menor_coste(self, heap, node, cumulative_cost) -> tuple[bool, int]:
+    def comprob_menor_coste(self, heap, node, cumulative_cost) -> tuple[bool, int | None]:
 
         if not heap:
             return (False, 0)
@@ -57,12 +61,11 @@ class Algorithm(flygorithm):
             if node == tupla[3]:
 
                 if tupla[0] < cumulative_cost:
-                    return (True, 0)
+                    return (True, None)
 
                 else:
                     return (True, index)
-            else:
-                return (False, 0)
-                
+
+        return (False, 0)
 
 

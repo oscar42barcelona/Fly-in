@@ -1,25 +1,50 @@
-nb_drones: 2
+nb_drones: 5
 
-start_hub: hub 0 3 [color=green]
-end_hub: goal 10 3 [color=yellow]
+start_hub: hub 0 5 [color=green]
+end_hub: goal 16 5 [color=yellow]
 
-hub: a 2 5 [zone=normal color=blue]
-hub: b 2 1 [zone=priority color=green]
-hub: c 4 5 [zone=restricted color=red]
-hub: d 4 3 [zone=normal color=blue]
-hub: e 4 1 [zone=normal color=blue]
-hub: f 7 5 [zone=priority color=green max_drones=2]
-hub: g 7 1 [zone=normal color=blue]
+hub: a 2 8 [zone=normal color=blue]
+hub: b 2 5 [zone=priority color=green]
+hub: c 2 2 [zone=normal color=blue]
+
+hub: d 5 9 [zone=restricted color=red]
+hub: e 5 6 [zone=normal color=blue max_drones=2]
+hub: f 5 3 [zone=priority color=green]
+hub: g 5 0 [zone=blocked color=gray]
+
+hub: h 8 8 [zone=normal color=blue]
+hub: i 8 5 [zone=restricted color=red]
+hub: j 8 2 [zone=normal color=blue]
+
+hub: k 11 8 [zone=priority color=green max_drones=2]
+hub: l 11 5 [zone=normal color=blue]
+hub: m 11 2 [zone=restricted color=red]
+
+hub: n 14 7 [zone=normal color=blue]
 
 connection: hub-a
 connection: hub-b
-connection: hub-d
-connection: a-c
+connection: hub-c
+connection: a-b
+connection: b-c
 connection: a-d
-connection: b-d
+connection: a-e
 connection: b-e
+connection: b-f
 connection: c-f
-connection: d-e
-connection: d-f
-connection: e-g
-connection: f-goal
+connection: c-g
+connection: d-h
+connection: e-h
+connection: e-i
+connection: e-f
+connection: f-i
+connection: f-j
+connection: g-j
+connection: h-i
+connection: h-k
+connection: i-l
+connection: j-l
+connection: j-m
+connection: k-n
+connection: l-n
+connection: n-goal
