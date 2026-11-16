@@ -33,7 +33,10 @@ class flygorithm(ABC):
         los drones desde start_hub hasta end_hub"""
 
     @abstractmethod
-    def solve(drones: list[Drone], graph: Graph) -> dict[int, list[MovementRecord]]:
+    def solve(drones: list[Drone],
+        graph: Graph,
+        routes: list[tuple[int, tuple[Node, ...]]]
+        ) -> dict[int, list[MovementRecord]]:
         """Parametros:
             - drones: Drones que participarán en la simulación.
             - Map: Objeto que contiene la red, conexiones y restricciones.
