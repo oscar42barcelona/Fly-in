@@ -33,10 +33,7 @@ drones_list = factory.create_drones(nb_drones=modelo_py.NB_DRONES,
                                     start_node=start)
 drone = drones_list[0]
 
-solution_route = alg.original_djikstra_route_finding(drone, graph)
-
-solution = alg.YensAlgorithm(drone, graph, solution_route, modelo_py.NB_DRONES)
-
+solution = alg.solve(drone, graph, modelo_py.NB_DRONES)
 
 
 print("\n=== Solution ===")

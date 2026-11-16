@@ -1,5 +1,5 @@
 from input.validator import Zone
-from .base import MovementRecord, flygorithm
+from .base import flygorithm
 from ..Graph.Drone import Drone
 from ..Graph.Map import Node, Connection, Graph
 from heapq import heappush, heappop, heapify
@@ -8,10 +8,21 @@ from itertools import count
 
 
 class Algorithm(flygorithm):
-    def solve(self, drone: Drone, graph: Graph) -> dict[int, list[MovementRecord]]:
-        ...
 
-    
+    def solve(
+        self,
+        drone: Drone,
+        graph: Graph,
+        k: int = 3
+        ) -> list[tuple[int, tuple[Node, ...]]]:
+
+        route = self.djikstra_route_finding(drone, graph)
+        return self.YensAlgorithm(
+            drone,
+            graph,
+            route,
+            k
+            )
 
     def YensAlgorithm(
         self,
@@ -225,7 +236,7 @@ class Algorithm(flygorithm):
         raise ValueError("El nodo no pertenece a la ruta")
 
                 
-    def original_djikstra_route_finding(self, drone: Drone, graph: Graph) -> tuple[Node, ...]:
+    def djikstra_route_finding(self, drone: Drone, graph: Graph) -> tuple[Node, ...]:
         """
         Contemplar el caso en que no exista ningún camino entre origen y destino.
         """
