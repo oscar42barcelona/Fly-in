@@ -30,7 +30,7 @@ def YensAlgorithm(
     if route[-1].name != "goal":
         raise ValueError("La ruta no termina en goal")
 
-    # A: caminos aceptados.
+    # A: caminos aceptados con su coste acumulado correspondiente.
     goal_routes = [(self.cost_route(route[-1], route), route)]
 
     # B: caminos candidatos pendientes.
@@ -140,7 +140,9 @@ def YensAlgorithm(
 
                 tuple_list = previous_tuple + (next_node,)
 
-                # Ignorar entradas antiguas del heap.
+                # Ignorar entradas antiguas del heap, 
+                #es decir la relajacion que hemos hecho antes la actualizamos
+
                 while (
                     previous_cost > best_cost.get(
                         next_node.name, float("inf")
@@ -197,30 +199,30 @@ def YensAlgorithm(
     return goal_routes
 
 
-def cost_route(
-    self,
-    route_node: Node,
-    route: tuple[Node, ...] | list[Node]
-) -> int:
+    def cost_route(
+        self,
+        route_node: Node,
+        route: tuple[Node, ...] | list[Node]
+        ) -> int:
 
-    cost = 0
+        cost = 0
 
-    for node in route[1:]:
+        for node in route[1:]:
 
-        if node.zone.cost is None:
-            raise ValueError(
-                f"El nodo {node.name} no tiene coste"
-            )
+            if node.zone.cost is None:
+                raise ValueError(
+                    f"El nodo {node.name} no tiene coste"
+                )
 
-        cost += node.zone.cost
+            cost += node.zone.cost
 
-        if node.name == route_node.name:
-            return cost
+            if node.name == route_node.name:
+                return cost
 
-    if route[0].name == route_node.name:
-        return 0
+        if route[0].name == route_node.name:
+            return 0
 
-    raise ValueError("El nodo no pertenece a la ruta")
+        raise ValueError("El nodo no pertenece a la ruta")
 
 """
     def YensAlgorithm(self, drone: Drone,
