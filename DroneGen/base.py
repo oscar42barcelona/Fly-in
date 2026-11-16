@@ -28,18 +28,18 @@ class MovementRecord:
     location: str    
 
 
-class flygorithm(ABC):
+class flychestrator(ABC):
     """Este algorimto debe de encargarse de transportar
         los drones desde start_hub hasta end_hub"""
 
     @abstractmethod
-    def solve(drones: list[Drone],
-        graph: Graph,
+    def plan(drones: list[Drone],
         routes: list[tuple[int, tuple[Node, ...]]]
         ) -> dict[int, list[MovementRecord]]:
         """Parametros:
             - drones: Drones que participarán en la simulación.
             - Map: Objeto que contiene la red, conexiones y restricciones.
+            - routes: rutas eficientes con sus costos acumulados.
         salida:
             - diccionario donde cada clave representa un turno 
             y cada valor contiene los registros correspondientes.

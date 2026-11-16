@@ -18,9 +18,8 @@ class Node:
         self.COLOR = color
         self.capacity = max_drones
         self.drones: list[Drone]
-        #self.cumulative_cost = 0 noseeeeeeeeeeeee
 
-    def enter_drone(self, drone: Drone, previous_node: Drone) -> bool:
+    def enter_drone(self, drone: Drone) -> bool:
         """registrar la presencia de un dron en el nodo."""
 
         if len(self.drones) == self.capacity:
@@ -31,14 +30,9 @@ class Node:
         
         self.drones.append(drone)
 
-        """if previous_drone.name == "start":
-            self.cumulative_cost = self.zone.cost
-        else:
-            self.cumulative_cost = cumulative_cost + previous_drone.cost"""
-
         return True
 
-    def exit_node(self, drone: Drone) -> bool:
+    def exit_drone(self, drone: Drone) -> bool:
         pass
 
         #pendiente determinar qué ocurre si no está presente.
@@ -78,40 +72,6 @@ class Connection:
         #Errores: no se han tratado casos especiales.
         #Ejemplo: extremos (0, 0) y (4, 2) dan (2, 1).
 
-
-class Drone:
-    def __init__(self, id_: int,
-                start_node: Node):
-        self.id = id_
-        self.current_node: Node | None = start_node
-        self.current_connection: Connection | None = None
-        self.headed_to: Node | None = None
-        self.delivered: bool = False
-
-    def move_to_node(self, destination: Node) -> None:
-        """actualizar la posición en un movimiento de un 
-        turno hacia zona normal o priority."""
-        self.current_node = destination
-        """errores: (InvalidDroneStateError)"""
-
-    def start_restricted_transit(self, connection: Connection, 
-                                destination: Node) -> None:
-        """reflejar el inicio de un movimiento que requiere dos turnos."""
-        self.current_connection = connection
-        self.current_node = None
-        self.headed_to = destination
-        """Errores: estado inválido mediante mecanismo aún por cerrar."""
-
-    def end_restricted_transit() -> None:
-        """reflejar la llegada obligatoria al 
-            término del segundo turno."""
-
-        self.current_connection = None
-        self.current_node = self.headed_to
-        self.headed_to = None
-
-        """Errores: estado inválido mediante 
-            mecanismo aún por cerrar"""
         
 class Graph:
     def __init__(self, nodes: list[Node],
