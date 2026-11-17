@@ -5,55 +5,29 @@ from Graph.Drone import Drone
 class orchestrator(flychestrator):
 
     def plan(drones: list[Drone],
-        routes: list[tuple[int, tuple[Node, ...]]]
+        routes: dict[int, tuple[int, tuple[Node, ...]]]
         ) -> dict[int, list[MovementRecord]]:
-        #muevo el primer drone al primer nodo
-        drone_1 = drones[0]
 
-        mapa_1 = routes[1][1]
+        while all nodes are .deivered:
+            for drone in drones:
+                for index, (total_cost, route) in routes.items():
+                    if drone.current_route == 0: #primera ruta:
 
-        nodo_1 = mapa_1[1]
+                        #De esta manera identificamos el siguiente nodo
+                        index = pos_next_node(drone.current_node, route)
+                        next_node = route[index]
 
-        drone_1.move_to_node(nodo_1)
+                        if next_node.available_node():
 
-        nodo_1.enter_drone(drone=drone_1)
+                            #avanzamos el drone.
+                            drone.move_to_node(next_node)
+                            next_node.exit_drone(drone)
 
-        #creo diccionario donde registraremos los movimientos de cada nodo por cada turno
-        turn_movement_record = {}
-        
-        #Instancio la clase para poder registrar el primer movimiento
-        primer_movimiento = MovementRecord(
-            drone_id=drone_1.id,
-            state=drone_1.state,
-            location=drone_1.current_node)
+                        else:
 
-        #y ahora lo guardamos en una lista
-        movement_record = []
-
-        movement_record.append(primer_movimiento)
-
-        #ahora vamos con el segundo drone. 
-
-        #muevo el segundo drone al primer nodo
-        drone_2 = drones[1]
-
-        mapa_1 = routes[1][1]
-
-        nodo_1 = mapa_1[1]
-
-        if drone_2.available_drone(nodo_1) is False:
-            mapa_2 = routes[1][2]
-            nodo_1 = mapa_2[1]
-            if drone_2.available_drone(nodo_1) is False:
-                mapa_3 = routes[1][3]
-                nodo_1 = mapa_3[1]
-                if drone_2.available_drone(nodo_1) is False:
-                    ...
-                else:
-                    if cost_till_end < coste de mapa + #el conteo de la cola para entrar en el nodo siguiente count(queueing_drones):
-                        drone_2.move_to_node(nodo_1)
-
-                        nodo_1.enter_drone(drone=drone_2)
-                    else:
-                        drone_2.move_to_node(self.current_node)
-                        nodo_1.queueing_drones(nodo_1) 
+    def pos_next_node(current_node: Node, route: tuple[Node, ...]) -> int:
+        for index, node in enumerate(route):
+            if node == current_node:
+                return index + 1
+        return None
+                

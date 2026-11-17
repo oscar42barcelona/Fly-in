@@ -18,12 +18,27 @@ class Node:
         self.COLOR = color
         self.capacity = max_drones
         self.drones: list[Drone]
+        self.queueing_drones: list[Drone]
 
+    def available_drone(self, drone: Drone) -> bool:
+        """registrar la presencia de un dron en el nodo."""
+
+        if len(self.drones) >= self.capacity:
+            return False
+
+        return True
+
+    def queueing_drones(self, drone: Drone) -> list[Drone]:
+         self.queueing_drones.append(drone)
+        
     def enter_drone(self, drone: Drone) -> bool:
         """registrar la presencia de un dron en el nodo."""
 
-        if len(self.drones) == self.capacity:
+        if available_drone(Drone) is False:
             return False
+
+        if drone in self.queueing_drones:
+            self.queueing_drones.remove(drone)
         #pendiente precisar duplicados, 
         #nodos bloqueados, 
         #restricciones y tratamiento de inicio/final.
