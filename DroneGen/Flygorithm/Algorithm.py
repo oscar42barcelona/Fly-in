@@ -14,15 +14,19 @@ class Algorithm(flygorithm):
         drone: Drone,
         graph: Graph,
         k: int = 3
-        ) -> list[tuple[int, tuple[Node, ...]]]:
+        ) -> dict[int,tuple[int, tuple[Node, ...]]]:
+
 
         route = self.djikstra_route_finding(drone, graph)
-        return self.YensAlgorithm(
-            drone,
-            graph,
-            route,
-            k
-            )
+        routes = self.YensAlgorithm(
+                 drone,
+                graph,
+                route,
+                k)
+
+        indexed_routes = {index: route for index, route in enumerate(routes)}
+
+        return indexed_routes
 
     def YensAlgorithm(
         self,
