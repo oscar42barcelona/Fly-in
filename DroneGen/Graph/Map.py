@@ -20,7 +20,7 @@ class Node:
         self.drones: list[Drone]
         self.queueing_drones: list[Drone]
 
-    def available_drone(self, drone: Drone) -> bool:
+    def available_node(self, drone: Drone) -> bool:
         """registrar la presencia de un dron en el nodo."""
 
         if len(self.drones) >= self.capacity:
