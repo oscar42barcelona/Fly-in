@@ -3,6 +3,7 @@ from pathlib import Path
 from .receiver import receiver
 
 from DroneGen.Graph.MapFactory import Factory
+from DroneGen.Orchestrator import orchestrator
 from DroneGen.Flygorithm.Algorithm import Algorithm
 
 
