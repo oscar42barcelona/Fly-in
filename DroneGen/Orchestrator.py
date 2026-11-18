@@ -13,13 +13,17 @@ class orchestrator(flychestrator):
 
         movement_record: list[MovementRecord] = []
 
+        turn_movement_record = {}
+
         delivered_count = 0
 
         len_drones = len(drones)
 
+        turn = 0
+
         while delivered_count < len_drones:
 
-            for drone in drones if drone.delivered is False:
+            for drone in enumerate(drones) if drone.delivered is False:
                 
                 #De esta manera identificamos el siguiente nodo
                 route_cost, route = routes[self.current_route]
@@ -47,6 +51,12 @@ class orchestrator(flychestrator):
 
                 if drone.delivered is True:
                     delivered_count += 1
+
+            turn += 1
+    
+            turn_movement_record[turn] = movement_record
+        
+        return turn_movement_record
 
     def search_enter(
         routes: dict[int, list[MovementRecord]],

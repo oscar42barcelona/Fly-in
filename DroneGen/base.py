@@ -1,9 +1,13 @@
-from abc import ABC, abstractmethod
-from .Graph.Drone import Drone
-from .Graph.Map import Graph
-from enum import Enum
-from dataclasses import dataclass
+from __future__ import annotations
 
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from enum import Enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .Graph.Drone import Drone
+    from .Graph.Map import Node
 
 class State(Enum):
     """

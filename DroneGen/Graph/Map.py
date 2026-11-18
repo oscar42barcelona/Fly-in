@@ -39,6 +39,7 @@ class Node:
 
         if drone in self.queueing_drones:
             self.queueing_drones.remove(drone)
+
         #pendiente precisar duplicados, 
         #nodos bloqueados, 
         #restricciones y tratamiento de inicio/final.

@@ -1,5 +1,6 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
-from ..Graph.base import State 
+from DroneGen.base import State
 
 if TYPE_CHECKING:
     from .Map import Node, Connection, Drone, Graph
@@ -19,7 +20,7 @@ class Drone:
         """actualizar la posición en un movimiento de un 
         turno hacia zona normal o priority."""
 
-        if destination = self.current_node:
+        if destination == self.current_node:
             self.state = State.STAY
             return        
     
