@@ -13,9 +13,13 @@ class orchestrator(flychestrator):
 
         movement_record: list[MovementRecord] = []
 
-        while all nodes are .deivered:
+        delivered_count = 0
 
-            for drone in drones:
+        len_drones = len(drones)
+
+        while delivered_count < len_drones:
+
+            for drone in drones if drone.delivered is False:
                 
                 #De esta manera identificamos el siguiente nodo
                 route_cost, route = routes[self.current_route]
@@ -24,10 +28,11 @@ class orchestrator(flychestrator):
 
                 #Si no puedo entrar el nodo...
                 if next_node.available_node() is False:
-                    next_node = search_enter()
+                    next_node = search_enter(routes, drone, next_node)
 
-                if next_node is not None:
-
+                if next_node is None:
+                    queueing_drones(drone)
+                else:
                     drone.current_node.exit_drone(drone)
                     next_node.enter_drone(drone)
 
@@ -40,25 +45,8 @@ class orchestrator(flychestrator):
                     drone.state,
                     current_node))
 
-
-    def pos_next_node(current_node: Node, route: tuple[Node, ...]) -> int:
-        """devolvemos el indice del nodo siguiente que toca en el mapa"""
-        for index, node in enumerate(route):
-            if node == current_node:
-                return index + 1
-        return None
-
-    def path_cost(current_node: Node, route: tuple[Node, ...]) -> int
-        """coste desde el nodo actual hasta el final"""
-        index = pos_next_node(current_node, route)
-
-        path_cost: int = 0
-
-        for node in route[index:-1]: #revisar si se acaba en el end_hub
-
-            path_cost = path_cost + node.zone.cost
-
-        return path_cost
+                if drone.delivered is True:
+                    delivered_count += 1
 
     def search_enter(
         routes: dict[int, list[MovementRecord]],
@@ -90,7 +78,7 @@ class orchestrator(flychestrator):
 
             current_path_cost = path_cost(next_node, route)
 
-            waiting_cost = len(occupied_nodes[0].queueing_drones)
+            waiting_cost = len(previous_node.queueing_drones)
 
             previous_total_cost = previous_path_cost + waiting_cost
 
@@ -100,9 +88,20 @@ class orchestrator(flychestrator):
             else:
                 return None
 
-                drone.current_node.exit_drone(drone)
-                drone.move_to_node(next_node)
-                next_node.enter_drone(drone)a
 
-        
-            
+    def pos_next_node(current_node: Node, route: tuple[Node, ...]) -> int:
+        """devolvemos el indice del nodo siguiente que toca en el mapa"""
+        for index, node in enumerate(route):
+            if node == current_node:
+                return index + 1
+        return None
+
+    def path_cost(current_node: Node, route: tuple[Node, ...]) -> int
+        """coste desde el nodo actual hasta el final"""
+        index = pos_next_node(current_node, route)
+
+        path_cost: int = 0
+
+        for node in route[index:-1]: #revisar si se acaba en el end_hub
+
+            path_cost = path_cost + node.zone.cost
