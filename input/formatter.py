@@ -33,9 +33,9 @@ fig = plot.create_figure()
 
 print("Figura creada:", type(fig))
 
-#fig.show()
+fig.show()
 
-fig.write_html("mapa_test.html", auto_open=False)
+#fig.write_html("mapa_test.html", auto_open=False)
 
 print("Después de show")
 
