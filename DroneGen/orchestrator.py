@@ -2,6 +2,8 @@ from .base import flychestrator, MovementRecord
 from input.validator import Zone #, HubType
 from Graph.Map import Node, Connection
 from Graph.Drone import Drone
+from heapq import heappush, heappop, heapify
+
 
 class orchestrator(flychestrator):
 
@@ -12,74 +14,31 @@ class orchestrator(flychestrator):
         movement_record: list[MovementRecord] = []
 
         while all nodes are .deivered:
+
             for drone in drones:
+                
+                #De esta manera identificamos el siguiente nodo
+                route_cost, route = routes[self.current_route]
+                index = pos_next_node(drone.current_node, route)
+                next_node = route[index]
 
-                occupied_nodes: list[Node] = []
+                #Si no puedo entrar el nodo...
+                if next_node.available_node() is False:
+                    next_node = search_enter()
 
-                for _, (route_cost, route) in routes.items():
+                if next_node is not None:
 
-                    #De esta manera identificamos el siguiente nodo
-                    index = pos_next_node(drone.current_node, route)
-                    next_node = route[index]
+                    drone.current_node.exit_drone(drone)
+                    next_node.enter_drone(drone)
 
-                    if drone.current_route == 0: #primera ruta:
+                drone.move_to_node(next_node) #si decidimos no avanzar, next_node debe de ser el mismo nodo
 
-                        if next_node.available_node():
-
-                            #avanzamos el drone.
-                            drone.current_node.exit_drone(drone)
-                            drone.move_to_node(next_node)
-                            next_node.enter_drone(drone)
-
-                            #registramos el movement_record
-                            #movement = "movement_" + "" + Como cuento los turnos?
-                            movement_record.append(MovementRecord( #lo estoy metiendo sin instanciar
-                                drone.id,
-                                drone.state,
-                                current_node))
-                            break
-                    else:
-                        
-                        if next_node.available_node():
-
-                            previous_path_cost = path_cost("""node""", route)
-
-                            current_path_cost = path_cost(drone.current_node, route)
-
-                            waiting_cost = len(occupied_nodes[0].queueing_drones)
-
-                            previous_total_cost = previous_path_cost + waiting_cost
-
-                            #Para escoger la ruta
-
-                            if previous_total_cost > current_path_cost:
-                                #avanzamos el drone.
-                                drone.current_node.exit_drone(drone)
-                                drone.move_to_node(next_node)
-                                next_node.enter_drone(drone)
-
-                                #registramos el movement_record
-                                #movement = "movement_" + "" + Como cuento los turnos?
-                                movement_record.append(MovementRecord( #lo estoy metiendo sin instanciar
-                                    drone.id,
-                                    drone.state,
-                                    current_node))
-                                break
-
-                        #Si hemos visitado todas las rutas y en ninguna tiene sentido avanzar                           
-                        drone.move_to_node(next_node) #si pero tendria que ser el nodo que mas me rentaria esperar
-                        next_node.enter_drone(drone)
-
-                        #registramos el movement_record
-                        #movement = "movement_" + "" + Como cuento los turnos?
-                        movement_record.append(MovementRecord(
-                            drone.id,
-                            drone.state,
-                            current_node))
-                        
-                        
-
-                                
+                #registramos el movement_record
+                #movement = "movement_" + "" + Como cuento los turnos???
+                movement_record.append(MovementRecord(
+                    drone.id,
+                    drone.state,
+                    current_node))
 
 
     def pos_next_node(current_node: Node, route: tuple[Node, ...]) -> int:
@@ -100,4 +59,50 @@ class orchestrator(flychestrator):
             path_cost = path_cost + node.zone.cost
 
         return path_cost
+
+    def search_enter(
+        routes: dict[int, list[MovementRecord]],
+        drone: Drone,
+        previous_node: Node,
+        ) -> Node:
+
+        initial_route = drone.current_route
+
+        graph = graph()
+
+        for route_index, (route_cost, route) in routes.items():
+
+            if route_index == initial_route:
+                continue
+
+            #De esta manera identificamos el siguiente nodo
+            index = pos_next_node(drone.current_node, route)
+            next_node = route[index]
+
+            connection_list = graph.get_connections(node)
+
+            #Si no se puede pasar o no se puede llegar porque no esta conectado
+            if next_node.available_node() is False
+                and drone.current_node not in connection_list:
+                continue
+
+            previous_path_cost = path_cost(previous_node, route)
+
+            current_path_cost = path_cost(next_node, route)
+
+            waiting_cost = len(occupied_nodes[0].queueing_drones)
+
+            previous_total_cost = previous_path_cost + waiting_cost
+
+            if previous_total_cost > current_path_cost:
+                drone.current_route = route_index
+                return next_node
+            else:
+                return None
+
+                drone.current_node.exit_drone(drone)
+                drone.move_to_node(next_node)
+                next_node.enter_drone(drone)a
+
+        
             

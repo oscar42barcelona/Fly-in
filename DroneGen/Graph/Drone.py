@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import TYPE_CHECKING
 from ..Graph.base import State 
 
@@ -14,7 +13,7 @@ class Drone:
         self.headed_to: Node | None = None
         self.delivered: bool = False
         self.state: State = State.STAY
-        slef.current_route = 0
+        self.current_route = 0
 
     def move_to_node(self, destination: Node) -> None:
         """actualizar la posición en un movimiento de un 
