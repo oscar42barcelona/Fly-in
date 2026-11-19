@@ -7,18 +7,18 @@ hub: a 2 8 [zone=normal color=blue]
 hub: b 2 5 [zone=priority color=green]
 hub: c 2 2 [zone=normal color=blue]
 
-hub: d 5 9 [zone=restricted color=red]
+hub: d 5 9 [color=red]
 hub: e 5 6 [zone=normal color=blue max_drones=2]
 hub: f 5 3 [zone=priority color=green]
 hub: g 5 0 [zone=blocked color=gray]
 
 hub: h 8 8 [zone=normal color=blue]
-hub: i 8 5 [zone=restricted color=red]
+hub: i 8 5 [color=red]
 hub: j 8 2 [zone=normal color=blue]
 
 hub: k 11 8 [zone=priority color=green max_drones=2]
 hub: l 11 5 [zone=normal color=blue]
-hub: m 11 2 [zone=restricted color=red]
+hub: m 11 2 [color=red]
 
 hub: n 14 7 [zone=normal color=blue]
 

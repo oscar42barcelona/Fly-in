@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .Graph.Drone import Drone
-    from .Graph.Map import Node
+    from .Graph.Map import Node, Graph
 
 class State(Enum):
     """
@@ -38,7 +38,8 @@ class flychestrator(ABC):
 
     @abstractmethod
     def plan(drones: list[Drone],
-        routes: list[tuple[int, tuple[Node, ...]]]
+        routes: list[tuple[int, tuple[Node, ...]]],
+        graph: Graph
         ) -> dict[int, list[MovementRecord]]:
         """Parametros:
             - drones: Drones que participarán en la simulación.

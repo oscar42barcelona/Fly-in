@@ -17,8 +17,8 @@ class Node:
         self.zone = zone
         self.COLOR = color
         self.capacity = max_drones
-        self.drones: list[Drone]
-        self.queueing_drones: list[Drone]
+        self.drones: list[Drone] = []
+        self.queueing_drones: list[Drone] = []
 
     def available_node(self, drone: Drone) -> bool:
         """registrar la presencia de un dron en el nodo."""
@@ -28,13 +28,13 @@ class Node:
 
         return True
 
-    def queueing_drones(self, drone: Drone) -> list[Drone]:
+    def queueing_drones_ft(self, drone: Drone) -> list[Drone]:
          self.queueing_drones.append(drone)
         
     def enter_drone(self, drone: Drone) -> bool:
         """registrar la presencia de un dron en el nodo."""
 
-        if available_drone(Drone) is False:
+        if self.available_node(drone) is False:
             return False
 
         if drone in self.queueing_drones:
