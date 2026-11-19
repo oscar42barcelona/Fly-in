@@ -10,7 +10,7 @@ class Node:
                 color: str,
                 max_drones: int
                 ):
-        self.name = name
+        self.name: str = name
         self.x = x
         self.y = y
         self.type = hub_type
@@ -23,6 +23,9 @@ class Node:
     def available_node(self, drone: Drone) -> bool:
         """registrar la presencia de un dron en el nodo."""
 
+        if self.type == "entry" or self.type == "exit":
+            return True
+        
         if len(self.drones) >= self.capacity:
             return False
 

@@ -43,8 +43,19 @@ cli = orchestrator()
 
 turn_movements = cli.plan(drones_list, solution, graph)
 
-launch(graph, turn_movements)
+for turn, movements in turn_movements.items():
+    print(f"TURN {turn}")
+    for movement in movements:
+        print(
+            movement.drone_id,
+            movement.state,
+            movement.location
+        )
+print(
+    turn_movements[1] is turn_movements[2]
+)
 
+launch(graph, turn_movements, start_name="hub")
 
 
 

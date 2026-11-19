@@ -12,7 +12,7 @@ class orchestrator(flychestrator):
          graph: Graph
         ) -> dict[int, list[MovementRecord]]:
 
-        movement_record: list[MovementRecord] = []
+        movement_record: list[MovementRecord]
         turn_movement_record = {}
         delivered_count = 0
         len_drones = len(drones)
@@ -20,6 +20,8 @@ class orchestrator(flychestrator):
 
         while delivered_count < len_drones:
 
+            movement_record = []
+            
             for drone in drones:
 
                 if drone.delivered is True:
@@ -42,14 +44,13 @@ class orchestrator(flychestrator):
                 else:
                     drone.current_node.exit_drone(drone)
                     next_node.enter_drone(drone)
-
-                drone.move_to_node(next_node) #si decidimos no avanzar, next_node debe de ser el mismo nodo
+                    drone.move_to_node(next_node) 
 
                 #registramos el movement_record
                 movement_record.append(MovementRecord(
                     drone.id,
                     drone.state,
-                    drone.current_node.name))
+                    drone.current_node.name)) #voy a arreglar esto porque arriba hago exit
 
                 if drone.delivered is True:
                     delivered_count += 1
@@ -85,11 +86,13 @@ class orchestrator(flychestrator):
 
             #Si no se puede pasar o no se puede llegar porque no esta conectado
             if(next_node.available_node(drone) is False
-                and drone.current_node not in connection_list
+                or drone.current_node not in connection_list
             ):
                 continue
 
-            previous_path_cost = self.path_cost(previous_node, drone.current_route)
+            _, previous_route = routes[drone.current_route]
+
+            previous_path_cost = self.path_cost(previous_node, previous_route)
 
             current_path_cost = self.path_cost(next_node, route)
 

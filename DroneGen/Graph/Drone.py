@@ -22,7 +22,10 @@ class Drone:
 
         if destination == self.current_node:
             self.state = State.STAY
-            return        
+            return
+
+        if destination.type == "exit":
+            self.delivered = True 
     
         self.current_node = destination
 
