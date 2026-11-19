@@ -11,12 +11,13 @@ class Factory():
         
         return Drone(self.drone_id, start_node)
 
-    def create_drones(self,nb_drones, start_node) -> list[Drone]:
+    def create_drones(self, nb_drones: int, start_node: Node) -> list[Drone]:
         drone_list: list[drone] = []
         
         for _ in range(nb_drones):
 
             drone = self.create_drone(start_node)
+            start_node.enter_drone(drone)
             drone_list.append(drone)
     
         return drone_list

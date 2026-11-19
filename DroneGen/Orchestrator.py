@@ -49,7 +49,7 @@ class orchestrator(flychestrator):
                 movement_record.append(MovementRecord(
                     drone.id,
                     drone.state,
-                    drone.current_node))
+                    drone.current_node.name))
 
                 if drone.delivered is True:
                     delivered_count += 1
@@ -89,7 +89,7 @@ class orchestrator(flychestrator):
             ):
                 continue
 
-            previous_path_cost = self.path_cost(previous_node, route)
+            previous_path_cost = self.path_cost(previous_node, drone.current_route)
 
             current_path_cost = self.path_cost(next_node, route)
 

@@ -49,11 +49,9 @@ class Node:
         return True
 
     def exit_drone(self, drone: Drone) -> bool:
-        pass
+        self.drones.remove(drone)
 
         #pendiente determinar qué ocurre si no está presente.
-
-        # o bien self.drones.popleft() o quitar el que me digan
 
 
 class Connection:
