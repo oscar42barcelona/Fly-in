@@ -42,14 +42,14 @@ class Drone:
         self.headed_to = destination
         """Errores: estado inválido mediante mecanismo aún por cerrar."""
 
-    def end_restricted_transit() -> None:
+    def end_restricted_transit(self) -> None:
         """reflejar la llegada obligatoria al 
             término del segundo turno."""
 
         self.current_connection = None
         self.current_node = self.headed_to
         self.headed_to = None
+        self.state = State.MOVEMENT
 
         """Errores: estado inválido mediante 
-            mecanismo aún por cerrar"""
-                                           
+            mecanismo aún por cerrar"""                                           

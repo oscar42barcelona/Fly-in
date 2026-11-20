@@ -19,8 +19,9 @@ class Node:
         self.capacity = max_drones
         self.drones: list[Drone] = []
         self.queueing_drones: list[Drone] = []
+        self.reserved_drones: list[Drone] = []
 
-    def available_node(self, drone: Drone) -> bool:
+    def available_node(self) -> bool:
         """registrar la presencia de un dron en el nodo."""
 
         if self.type == "entry" or self.type == "exit":
@@ -29,16 +30,22 @@ class Node:
         if len(self.drones) >= self.capacity:
             return False
 
-        return True
+        occupied = len(self.drones) + len(self.reserved_drones)
+
+        return occupied < self.capacity
 
     def queueing_drones_ft(self, drone: Drone) -> list[Drone]:
-         self.queueing_drones.append(drone)
+        if drone not in self.queueing_drones:
+            self.queueing_drones.append(drone)
         
     def enter_drone(self, drone: Drone) -> bool:
         """registrar la presencia de un dron en el nodo."""
-
-        if self.available_node(drone) is False:
-            return False
+        if drone not in self.reserved_drones:
+            if self.available_node() is False:
+                return False
+        
+        else:
+            self.reserved_drones.remove(drone)
 
         if drone in self.queueing_drones:
             self.queueing_drones.remove(drone)
@@ -64,11 +71,19 @@ class Connection:
         self.node_a = node_a
         self.node_b = node_b
         self.capacity = max_link_capacity
-        self.drones: list[Drone]
+        self.drones: list[Drone] = []
+
+    def available_connection(self) -> bool:
+        """registrar la presencia de un dron en el nodo."""
+
+        if len(self.drones) >= self.capacity:
+            return False
+
+        return True
             
     def enter_connection(self, drone: Drone) -> bool:
 
-        if len(self.drones) == self.capacity:
+        if self.available_connection() is False:
             return False
 
         #impedir duplicados; detalle de fallo pendiente.
@@ -77,7 +92,8 @@ class Connection:
         return True
 
     def exit_connection(self, drone) -> bool:
-        ...
+                self.drones.remove(drone)
+
         #pendiente determinar qué ocurre si no está presente.
 
         # o bien self.drones.popleft() o quitar el que me digan
