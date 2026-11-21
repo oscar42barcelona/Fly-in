@@ -1,300 +1,211 @@
-from input.validator import Zone
+"""Busca rutas por coste y favorece zonas PRIORITY en caso de empate."""
+
+# CAMBIO 1: anotaciones de tipos evaluadas de forma diferida.
+from __future__ import annotations
+
+from heapq import heappop, heappush
+from itertools import count
+
+from input.validator import HubType
 from .base import flygorithm
 from ..Graph.Drone import Drone
-from ..Graph.Map import Node, Connection, Graph
-from heapq import heappush, heappop, heapify
-from input.validator import HubType
-from itertools import count
+from ..Graph.Map import Graph, Node
 
 
 class Algorithm(flygorithm):
+    """Dijkstra para la primera ruta y Yen para rutas alternativas."""
 
     def solve(
         self,
         drone: Drone,
         graph: Graph,
-        k: int = 3
-        ) -> dict[int,tuple[int, tuple[Node, ...]]]:
+        k: int = 3,
+    ) -> dict[int, tuple[int, tuple[Node, ...]]]:
+        # CAMBIO 2: validar k antes de buscar y mantener el formato de solve().
+        if k <= 0:
+            return {}
 
+        first_route = self.djikstra_route_finding(drone, graph)
+        routes = self.YensAlgorithm(drone, graph, first_route, k)
+        return {index: value for index, value in enumerate(routes)}
 
-        route = self.djikstra_route_finding(drone, graph)
-        routes = self.YensAlgorithm(
-                 drone,
-                graph,
-                route,
-                k)
+    # CAMBIO 3: localizar la salida por HubType.EXIT, no por el nombre "goal".
+    @staticmethod
+    def _goal(graph: Graph) -> Node:
+        for node in graph.nodes:
+            if node.type == HubType.EXIT:
+                return node
+        raise ValueError("No exit node found in graph")
 
-        indexed_routes = {index: route for index, route in enumerate(routes)}
+    # CAMBIO 4: comparar rutas completas por (coste, penalizacion PRIORITY).
+    # Si tienen el mismo coste, gana la que acumula menor penalizacion.
+    @staticmethod
+    def _rank(route: tuple[Node, ...]) -> tuple[int, int]:
+        """Coste de turnos primero; penalizacion de prioridad despues."""
+        cost = 0
+        priority_penalty = 0
+        for node in route[1:]:
+            if node.zone.cost is None:
+                raise ValueError("A route cannot cross a blocked node")
+            cost += node.zone.cost
+            priority_penalty += node.zone.priority
+        return cost, priority_penalty
 
-        return indexed_routes
+    # CAMBIO 5: Dijkstra reutilizable para la ruta inicial y los desvios de Yen.
+    # Sustituye la busqueda anterior que gestionaba el heap manualmente.
+    def _shortest_path(
+        self,
+        start: Node,
+        goal: Node,
+        graph: Graph,
+        blocked_nodes: set[Node] | None = None,
+        blocked_edges: set[frozenset[Node]] | None = None,
+    ) -> tuple[Node, ...] | None:
+        """Dijkstra con desempate de prioridad sobre la ruta completa."""
+        excluded_nodes = blocked_nodes if blocked_nodes is not None else set()
+        excluded_edges = blocked_edges if blocked_edges is not None else set()
+        serial = count()
+        heap: list[tuple[int, int, int, Node, tuple[Node, ...]]] = [
+            (0, 0, next(serial), start, (start,))
+        ]
+        # Cada nodo guarda su mejor par (coste, prioridad), no solo el coste.
+        best: dict[Node, tuple[int, int]] = {start: (0, 0)}
 
+        while heap:
+            cost, penalty, _, current, path = heappop(heap)
+            # Descartamos entradas antiguas del heap sin borrarlas a mano.
+            if (cost, penalty) != best[current]:
+                continue
+            if current is goal:
+                return path
+
+            for neighbor in graph.get_connections(current):
+                if neighbor in excluded_nodes or neighbor in path:
+                    continue
+                # El grafo es bidireccional: bloqueamos ambos sentidos.
+                if frozenset((current, neighbor)) in excluded_edges:
+                    continue
+                step_cost = neighbor.zone.cost
+                if step_cost is None:
+                    continue
+                if step_cost < 0:
+                    raise ValueError("Dijkstra requires nonnegative costs")
+
+                # Desempate por prioridad acumulada en todo el recorrido.
+                # En validator.py PRIORITY=0 y NORMAL=1.
+                score = (
+                    cost + step_cost,
+                    penalty + neighbor.zone.priority,
+                )
+                if score >= best.get(neighbor, (float("inf"), float("inf"))):
+                    continue
+                best[neighbor] = score
+                heappush(
+                    heap,
+                    (
+                        score[0],
+                        score[1],
+                        next(serial),  # Evita comparar objetos Node en empates.
+                        neighbor,
+                        path + (neighbor,),
+                    ),
+                )
+
+        return None
+
+    # CAMBIO 6: interfaz publica conservada; delega en _shortest_path().
+    def djikstra_route_finding(
+        self,
+        drone: Drone,
+        graph: Graph,
+    ) -> tuple[Node, ...]:
+        """Devuelve la mejor ruta; mantiene el nombre usado por el proyecto."""
+        start = drone.current_node
+        if start is None:
+            raise ValueError("Drone has no current node")
+        route = self._shortest_path(start, self._goal(graph), graph)
+        if route is None:
+            raise ValueError("No route exists from start to exit")
+        return route
+
+    # CAMBIO 7: Yen busca desviaciones con el mismo Dijkstra y desempate.
+    # Reemplaza el bucle de busqueda dentro de cada desviacion original.
     def YensAlgorithm(
         self,
         drone: Drone,
         graph: Graph,
         route: tuple[Node, ...],
-        k: int = 3
-        ) -> list[tuple[int, tuple[Node, ...]]]:
-
+        k: int = 3,
+    ) -> list[tuple[int, tuple[Node, ...]]]:
+        """Genera hasta k rutas simples, ordenadas por coste y prioridad."""
         if k <= 0 or not route:
             return []
 
-        if route[0].name != drone.current_node.name:
-            raise ValueError("La ruta no comienza en el nodo del dron")
+        goal = self._goal(graph)
+        if route[0] is not drone.current_node:
+            raise ValueError("Route does not start at the drone's node")
+        if route[-1] is not goal:
+            raise ValueError("Route does not reach the exit")
 
-        if route[-1].name != "goal":
-            raise ValueError("La ruta no termina en goal")
+        accepted: list[tuple[Node, ...]] = [route]
+        # Evita que la misma ruta se incorpore varias veces.
+        known: set[tuple[Node, ...]] = {route}
+        serial = count()
+        candidates: list[tuple[int, int, int, tuple[Node, ...]]] = []
 
-        # A: caminos aceptados con su coste acumulado correspondiente.
-        goal_routes = [(self.cost_route(route[-1], route), route)]
-
-        # B: caminos candidatos pendientes.
-        candidate_heap = []
-        contador = count()
-
-        # Evitar candidatos duplicados.
-        known_routes = {
-            tuple(node.name for node in route)
-            }
-
-        while len(goal_routes) < k:
-
-            # Última ruta aceptada.
-            route = goal_routes[-1][1]
-
-            # Recorrer todos sus puntos de desviación,
-            # excepto el destino.
-            for index, route_node in enumerate(route[:-1]):
-
-                heap = []
-
-                # Prefijo fijo hasta el spur node.
-                root_path = route[:index + 1]
-
-                root_cost = self.cost_route(route_node, root_path)
-
-                # Estado inicial de esta búsqueda.
-                next_node = route_node
-                tuple_list = (route_node,)
-                previous_cost = 0
-
-                # Nodos anteriores al spur node.
-                blocked_nodes = {
-                    node.name for node in root_path[:-1]
-                    }
-
-                # Aristas excluidas por prefijos compartidos.
-                blocked_edges = set()
-
-                for _, accepted_route in goal_routes:
-
-                    if accepted_route[:index + 1] == root_path:
-
-                        if len(accepted_route) > index + 1:
-                            blocked_edges.add((
-                                accepted_route[index].name,
-                                accepted_route[index + 1].name
-                                ))
-
-                # Mejor coste conocido desde el spur node.
-                best_cost = {route_node.name: 0}
-
-                while next_node.name != "goal":
-
-                    connection_list = [
-                        node
-                        for node in graph.get_connections(next_node)
-                        if node.name not in blocked_nodes
-                        and node.name not in {
-                            visited.name for visited in tuple_list
-                        }
-                        and (next_node.name, node.name)
-                            not in blocked_edges
-                    ]
-
-                    for node in connection_list:
-
-                        if node.zone.cost is None:
-                            continue
-
-                        if node.zone.cost < 0:
-                            raise ValueError(
-                                "Dijkstra requiere costes no negativos"
-                            )
-
-                        cumulative_cost = (
-                            previous_cost + node.zone.cost
-                        )
-
-                        # Relajación de Dijkstra.
-                        if cumulative_cost >= best_cost.get(
-                            node.name, float("inf")
-                        ):
-                            continue
-
-                        best_cost[node.name] = cumulative_cost
-
-                        heappush(
-                            heap,
-                            (
-                                cumulative_cost,
-                                node.zone.priority,
-                                next(contador),
-                                node,
-                                tuple_list
-                            )
-                        )
-
-                    # La desviación no tiene continuación.
-                    if not heap:
-                        break
-
-                    previous_cost, _, _, next_node, previous_tuple = (
-                        heappop(heap)
-                    )
-
-                    tuple_list = previous_tuple + (next_node,)
-
-                    # Ignorar entradas antiguas del heap, 
-                    #es decir la relajacion que hemos hecho antes la actualizamos
-
-                    while (
-                        previous_cost > best_cost.get(
-                            next_node.name, float("inf")
-                        )
-                    ):
-                        if not heap:
-                            next_node = None
-                            break
-
-                        previous_cost, _, _, next_node, previous_tuple = (
-                            heappop(heap)
-                        )
-                        tuple_list = previous_tuple + (next_node,)
-
-                    if next_node is None:
-                        break
-
-                # No se ha encontrado una desviación válida.
-                if next_node is None or next_node.name != "goal":
-                    continue
-
-                # Unir prefijo y desviación sin repetir spur node.
-                complete_route = root_path[:-1] + tuple_list
-
-                total_cost = root_cost + previous_cost
-
-                route_key = tuple(
-                    node.name for node in complete_route
+        while len(accepted) < k:
+            previous = accepted[-1]
+            for index in range(len(previous) - 1):
+                prefix = previous[:index + 1]
+                # No podemos volver a visitar nodos anteriores del prefijo.
+                forbidden_nodes = set(prefix[:-1])
+                # Excluir la arista que generaria una ruta ya aceptada.
+                forbidden_edges = {
+                    frozenset((existing[index], existing[index + 1]))
+                    for existing in accepted
+                    if len(existing) > index + 1
+                    and existing[:index + 1] == prefix
+                }
+                suffix = self._shortest_path(
+                    prefix[-1], goal, graph, forbidden_nodes, forbidden_edges
                 )
-
-                if route_key in known_routes:
+                if suffix is None:
                     continue
-
-                known_routes.add(route_key)
-
+                candidate = prefix[:-1] + suffix
+                if candidate in known:
+                    continue
+                known.add(candidate)
+                # Antes Yen ordenaba solo por coste; ahora desempata por prioridad.
+                cost, penalty = self._rank(candidate)
                 heappush(
-                    candidate_heap,
-                    (
-                        total_cost,
-                        next(contador),
-                        complete_route
-                    )
+                    candidates,
+                    (cost, penalty, next(serial), candidate),
                 )
 
-            # No quedan más caminos candidatos.
-            if not candidate_heap:
+            if not candidates:
                 break
+            _, _, _, selected = heappop(candidates)
+            accepted.append(selected)
 
-            # Seleccionar el candidato más barato.
-            cost, _, selected_route = heappop(candidate_heap)
+        return [(self._rank(path)[0], path) for path in accepted]
 
-            goal_routes.append((cost, selected_route))
-
-        return goal_routes
-
-
+    # CAMBIO 8: se conserva cost_route() por compatibilidad, pero se
+    # simplifica el calculo y se comprueban rutas vacias o bloqueadas.
     def cost_route(
         self,
         route_node: Node,
-        route: tuple[Node, ...] | list[Node]
-        ) -> int:
-
+        route: tuple[Node, ...] | list[Node],
+    ) -> int:
+        """Coste acumulado desde el inicio hasta route_node."""
+        if not route:
+            raise ValueError("Empty route")
         cost = 0
-
+        if route[0] is route_node:
+            return cost
         for node in route[1:]:
-
             if node.zone.cost is None:
-                raise ValueError(
-                    f"El nodo {node.name} no tiene coste"
-                )
-
+                raise ValueError(f"Node {node.name} has no valid cost")
             cost += node.zone.cost
-
-            if node.name == route_node.name:
+            if node is route_node:
                 return cost
-
-        if route[0].name == route_node.name:
-            return 0
-
-        raise ValueError("El nodo no pertenece a la ruta")
-
-                
-    def djikstra_route_finding(self, drone: Drone, graph: Graph) -> tuple[Node, ...]:
-        """
-        Contemplar el caso en que no exista ningún camino entre origen y destino.
-        """
-        heap = []
-
-        cumulative_cost: int = 0
-
-        next_node = drone.current_node
-
-        tuple_list = (next_node,)
-
-        while next_node.name != "goal":
-
-            connection_list = [node for node in graph.get_connections(next_node) if node not in tuple_list]
-
-            for node in connection_list:
-
-                if node.zone.cost is not None:
-
-                    if next_node.type == "entry":
-                        cumulative_cost = node.zone.cost
-                    else:
-                        cumulative_cost = node.zone.cost + previous_cost
-
-                    flag, index = self.comprob_menor_coste(heap, node, cumulative_cost)
-
-                    if flag:
-                        if not index:
-                            continue
-                        heap.pop(index)
-
-                        heapify(heap)
-
-                    heappush(heap, (cumulative_cost, node.zone.priority, node.name, node, tuple_list))
-
-            previous_cost, _, _, next_node, previous_tuple = heappop(heap)
-
-            tuple_list = (previous_tuple + (next_node,))
-
-
-        return tuple_list
-
-
-    def comprob_menor_coste(self, heap, node, cumulative_cost) -> tuple[bool, int | None]:
-
-        if not heap:
-            return (False, 0)
-        for index, tupla in enumerate(heap):
-            if node == tupla[3]:
-
-                if tupla[0] < cumulative_cost:
-                    return (True, None)
-
-                else:
-                    return (True, index)
-
-        return (False, 0)
+        raise ValueError("Node is not part of the route")

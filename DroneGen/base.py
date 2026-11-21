@@ -37,9 +37,11 @@ class flychestrator(ABC):
         los drones desde start_hub hasta end_hub"""
 
     @abstractmethod
-    def plan(drones: list[Drone],
-        routes: list[tuple[int, tuple[Node, ...]]],
-        graph: Graph
+    def plan(
+        self,
+        drones: list[Drone],
+        routes: dict[int, tuple[int, tuple[Node, ...]]],
+        graph: Graph,
         ) -> dict[int, list[MovementRecord]]:
         """Parametros:
             - drones: Drones que participarán en la simulación.
