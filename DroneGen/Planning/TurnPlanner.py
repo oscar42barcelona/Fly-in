@@ -3,11 +3,11 @@
 from DroneGen.base import State
 from DroneGen.Graph.Drone import Drone
 from DroneGen.Graph.Map import Connection, Graph, Node
-from DroneGen.Planning.MovementIntent import MovementIntent, MovementKind
+from DroneGen.Planning.base import MovementIntent, MovementKind, BaseTurnPlanner
 from input.validator import Zone
 
 
-class TurnPlanner:
+class TurnPlanner(BaseTurnPlanner):
     """Decide un turno usando ocupaciones conjuntas, sin mover al evaluar."""
 
     def collect_intents(
@@ -162,7 +162,7 @@ class TurnPlanner:
             connection: len(connection.drones)
             for connection in graph.connections
         }
-
+        #Aqui actualizamos los drones que estaran en las conexiones o nodos.
         for intent in intents:
             if intent.kind == MovementKind.END_TRANSIT:
                 link_usage[intent.connection] -= 1
@@ -199,6 +199,7 @@ class TurnPlanner:
         Criterio conservador: ninguna salida futura libera una reserva.
         """
         occupancy = {node: len(node.drones) for node in graph.nodes}
+        #primer bucle movimientos de ette turno
         for intent in intents:
             if intent.kind == MovementKind.END_TRANSIT:
                 occupancy[intent.destination] += 1
@@ -209,11 +210,11 @@ class TurnPlanner:
                 occupancy[origin] -= 1
                 if intent.kind == MovementKind.NORMAL:
                     occupancy[intent.destination] += 1
-
+        #reserva para los restricted
         for intent in intents:
             if intent.kind == MovementKind.START_TRANSIT:
                 occupancy[intent.destination] += 1
-
+        #devuelvo solo los nodos en los que se prevee probblma de ocupacion
         return [
             node for node in graph.nodes
             if node.type not in ("entry", "exit")
@@ -238,12 +239,19 @@ class TurnPlanner:
         La seleccion es voraz; no garantiza el minimo global de turnos.
         """
         self.validate_intents(intents, graph)
+        #Esta línea crea una nueva lista con los mismos elementos que intents.
         approved = list(intents)
 
         while True:
             overloaded, negative, bad_links = self.find_capacity_conflicts(
                 approved, graph
             )
+
+            if negative:
+                raise RuntimeError(
+                    f"Negative occupancy detected in nodes: "
+                    f"{[node.name for node in negative]}")
+
             reservations = self.find_reservation_conflicts(approved, graph)
             if not (overloaded or negative or bad_links or reservations):
                 return approved
@@ -262,20 +270,6 @@ class TurnPlanner:
                 )
                 if removable is not None:
                     break
-
-            # Se han contabilizado demasiadas salidas de un nodo.
-            if removable is None:
-                for node in negative:
-                    removable = next(
-                        (
-                            intent for intent in reversed(approved)
-                            if intent.kind != MovementKind.END_TRANSIT
-                            and intent.origin is node
-                        ),
-                        None,
-                    )
-                    if removable is not None:
-                        break
 
             # Demasiados drones usan una conexion durante el mismo turno.
             if removable is None:
