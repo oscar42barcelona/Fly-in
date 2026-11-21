@@ -97,3 +97,16 @@ class TurnPlanner:
 
         return None
 
+    def resolve_movements(
+        self,
+        intents: list[MovementIntent],
+        graph: Graph
+        ) -> list[MovementIntent]:
+        ...
+
+    def execute_movements(
+        self,
+        approved: list[MovementIntent]
+    ) -> None:
+    ...
+    ...
