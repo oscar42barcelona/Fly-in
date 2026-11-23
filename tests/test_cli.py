@@ -76,3 +76,53 @@ def test_priority_puzzle_meets_turn_limit() -> None:
     lines = result.stdout.strip().splitlines()
     assert len(lines) <= 7, f"Expected at most 7 turns, got {len(lines)}"
     assert sum(line.count("-goal") for line in lines) == 5
+
+
+def test_capacity_info_prints_usage_each_turn() -> None:
+    """Capacity mode supplements, but does not replace, the movement output."""
+    map_file = "maps/easy/01_linear_path.txt"
+    baseline = run_cli(map_file)
+    detailed = run_cli("--capacity-info", map_file)
+    assert baseline.returncode == detailed.returncode == 0, detailed.stderr
+
+    movements = baseline.stdout.strip().splitlines()
+    lines = detailed.stdout.strip().splitlines()
+    # The map has 4 nodes and 3 connections: eight lines per turn.
+    assert len(lines) == len(movements) * 8
+    for turn, move in enumerate(movements):
+        block = lines[turn * 8:(turn + 1) * 8]
+        assert block[0] == move
+        assert len([line for line in block if line.startswith("Zone ")]) == 4
+        assert len([line for line in block if line.startswith("Connection ")]) == 3
+    assert "Zone start: 1/unlimited drones" in lines[1:8]
+    assert "Zone waypoint1: 1/1 drones" in lines[1:8]
+    assert "Connection start-waypoint1: 1/1 capacity used" in lines[1:8]
+    assert "Zone goal: 2/unlimited drones" in lines[-7:]
+
+
+def test_capacity_info_counts_restricted_transit(tmp_path: Path) -> None:
+    """A transit occupies its connection before arriving at the zone."""
+    path = tmp_path / "restricted.txt"
+    path.write_text(
+        "nb_drones: 1\n"
+        "start_hub: start 0 0\n"
+        "hub: restricted 1 0 [zone=restricted]\n"
+        "end_hub: goal 2 0\n"
+        "connection: start-restricted [max_link_capacity=1]\n"
+        "connection: restricted-goal [max_link_capacity=1]\n",
+        encoding="utf-8",
+    )
+    result = run_cli("--capacity-info", str(path))
+    assert result.returncode == 0, result.stderr
+    lines = result.stdout.strip().splitlines()
+    assert lines[0] == "D1-start-restricted"
+    assert "Zone restricted: 0/1 drones" in lines[1:6]
+    assert "Connection start-restricted: 1/1 capacity used" in lines[1:6]
+    assert "Zone restricted: 1/1 drones" in lines[7:12]
+    assert "Connection start-restricted: 0/1 capacity used" in lines[7:12]
+
+
+def test_help_lists_capacity_info_flag() -> None:
+    result = run_cli("--help")
+    assert result.returncode == 0
+    assert "--capacity-info" in result.stdout
