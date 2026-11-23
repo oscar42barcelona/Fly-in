@@ -14,7 +14,7 @@ class receiver:
     """Convert the map text format into the project's validated model."""
 
     def __init__(self, path: str | None = None) -> None:
-        """Store the map path and line-number information for error messages."""
+        """Store the map path and line numbers used for error messages."""
         self.path = path
         self.index_hubs: list[int] = []
         self.index_connections: list[int] = []
