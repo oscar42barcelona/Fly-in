@@ -5,6 +5,11 @@ from pathlib import Path
 import streamlit as st
 
 from ui.visualizer.simulation_service import build_simulation
+from ui.visualizer.analysis import (
+    create_occupancy_figure,
+    create_comparison_figure,
+    summarize_simulation,
+)
 
 
 ROOT = Path(__file__).resolve().parent
@@ -75,3 +80,69 @@ figura.update_layout(
 )
 
 st.plotly_chart(figura, width="stretch")
+
+st.subheader("Análisis de la simulación")
+
+resumen = summarize_simulation(metricas, total_drones)
+st.write(
+    f"Duración: {resumen.total_turns} turnos. "
+    f"Máximo simultáneo en espera: {resumen.peak_waiting}. "
+    f"Máximo simultáneo en tránsito: {resumen.peak_transit}. "
+    f"Espera acumulada: {resumen.total_waiting_drone_turns} "
+    "turnos-dron."
+)
+st.plotly_chart(create_occupancy_figure(metricas), width="stretch")
+
+if st.checkbox("Comparar con otro mapa"):
+    nombres_alternativos = [
+        nombre for nombre in MAPAS if nombre != nombre_mapa
+    ]
+    nombre_comparado = st.selectbox(
+        "Mapa para comparar", nombres_alternativos
+    )
+    ruta_comparada = ROOT / MAPAS[nombre_comparado]
+
+    try:
+        figura_comparada, metricas_comparadas, drones_comparados = (
+            cargar_simulacion(
+                str(ruta_comparada),
+                ruta_comparada.stat().st_mtime_ns,
+            )
+        )
+    except (OSError, ValueError, RuntimeError) as error:
+        st.error(str(error))
+        st.stop()
+
+    resumen_comparado = summarize_simulation(
+        metricas_comparadas, drones_comparados
+    )
+    st.plotly_chart(
+        create_comparison_figure(
+            {
+                nombre_mapa: (metricas, total_drones),
+                nombre_comparado: (metricas_comparadas, drones_comparados),
+            }
+        ),
+        width="stretch",
+    )
+    st.table(
+        [
+            {
+                "Mapa": nombre_mapa,
+                "Drones": resumen.total_drones,
+                "Turnos": resumen.total_turns,
+                "Pico en espera": resumen.peak_waiting,
+            },
+            {
+                "Mapa": nombre_comparado,
+                "Drones": resumen_comparado.total_drones,
+                "Turnos": resumen_comparado.total_turns,
+                "Pico en espera": resumen_comparado.peak_waiting,
+            },
+        ]
+    )
+    st.caption(
+        "El porcentaje de entregas corrige la diferencia en número de "
+        "drones. Los turnos siguen siendo absolutos: distintos mapas "
+        "pueden tener rutas, capacidades y dificultad diferentes."
+    )
