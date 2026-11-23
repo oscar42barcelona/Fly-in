@@ -6,7 +6,7 @@ It can be saved as HTML now and embedded in Streamlit later.
 
 from __future__ import annotations
 
-from plotly.graph_objects import Figure, Frame, Scatter
+from plotly.graph_objects import Figure, Frame, Scatter, scatter
 
 from DroneGen.Graph.Map import Connection, Node
 from .turn_positions import TurnPositionReplayer
@@ -25,6 +25,70 @@ _ZONE_COLORS = {
 
 
 class plotlyzer(Visualizer):
+    """Render Fly-in maps and turn-by-turn drone positions."""
+
+    @staticmethod
+    def _node_color(node: Node) -> str:
+        """Use valid Plotly colors, with a fallback for arbitrary names."""
+        supplied = (node.COLOR or "").strip()
+        if supplied.casefold() in ("", "none", "grey", "rainbow"):
+            return _ZONE_COLORS[node.zone]
+        try:
+            scatter.Marker(color=supplied)
+        except ValueError:
+            return _ZONE_COLORS[node.zone]
+        return supplied
+
+    @staticmethod
+    def _rainbow_traces(nodes: list[Node]) -> list[Scatter]:
+        """Overlay concentric colored markers for color=rainbow zones.
+
+        Rainbow is a valid one-word value in the map syntax, but is not
+        a single CSS color recognized by Plotly.
+        """
+        rainbow_nodes = [
+            node for node in nodes
+            if (node.COLOR or "").casefold() == "rainbow"
+        ]
+        if not rainbow_nodes:
+            return []
+
+        colors = (
+            "#ef4444", "#f97316", "#facc15", "#22c55e",
+            "#3b82f6", "#6366f1", "#a855f7",
+        )
+        traces: list[Scatter] = []
+        for index, color in enumerate(colors):
+            outer = index == len(colors) - 1
+            traces.append(
+                Scatter(
+                    x=[node.x for node in rainbow_nodes],
+                    y=[node.y for node in rainbow_nodes],
+                    mode="markers",
+                    name="Rainbow zone",
+                    marker=dict(
+                        color=color,
+                        size=33 - 4 * index,
+                        line=dict(width=0),
+                    ),
+                    customdata=[
+                        [node.name, node.type.value, node.zone.value,
+                         node.capacity]
+                        for node in rainbow_nodes
+                    ],
+                    hovertemplate=(
+                        "Zone: %{customdata[0]}<br>"
+                        "Type: %{customdata[1]}<br>"
+                        "Category: %{customdata[2]}<br>"
+                        "Capacity: %{customdata[3]}<br>"
+                        "Color: rainbow<extra></extra>"
+                    ) if outer else None,
+                    hoverinfo=None if outer else "skip",
+                    showlegend=False,
+                )
+            )
+        return traces
+
     def create_visualization(
         self, turn_movements: dict[int, list[MovementRecord]]
     ) -> Figure:
@@ -150,7 +214,7 @@ class plotlyzer(Visualizer):
         return Scatter(
             x=xs,
             y=ys,
-            mode="markers+text",
+            mode="markers",
             name="Drones",
             text=labels,
             textposition="top center",
@@ -199,11 +263,14 @@ class plotlyzer(Visualizer):
                 colors.append("#ef4444")
                 symbols.append("square")
             else:
-                colors.append(
-                    node.COLOR if node.COLOR and node.COLOR != "grey"
-                    else _ZONE_COLORS[node.zone]
+                colors.append(self._node_color(node))
+                symbols.append(
+                    {
+                        Zone.RESTRICTED: "hexagon",
+                        Zone.PRIORITY: "triangle-up",
+                        Zone.BLOCKED: "x",
+                    }.get(node.zone, "circle")
                 )
-                symbols.append("circle")
 
         fig.add_trace(
             Scatter(
@@ -211,14 +278,20 @@ class plotlyzer(Visualizer):
                 y=[node.y for node in nodes],
                 mode="markers+text",
                 name="Zones",
-                text=[node.name for node in nodes],
+                text=[
+                    node.name
+                    if node.type in (HubType.ENTRY, HubType.EXIT) else ""
+                    for node in nodes
+                ],
+                hovertext=[node.name for node in nodes],
                 textposition="top center",
+                textfont=dict(size=11, color="#1e293b"),
                 customdata=[
                     [node.type.value, node.zone.value, node.capacity]
                     for node in nodes
                 ],
                 hovertemplate=(
-                    "Zone: %{text}<br>"
+                    "Zone: %{hovertext}<br>"
                     "Type: %{customdata[0]}<br>"
                     "Category: %{customdata[1]}<br>"
                     "Capacity: %{customdata[2]}<extra></extra>"
@@ -233,6 +306,9 @@ class plotlyzer(Visualizer):
             )
         )
 
+        for overlay in self._rainbow_traces(nodes):
+            fig.add_trace(overlay)
+
         fig.update_layout(
             title="Fly-in | Map",
             xaxis_title="X",
@@ -244,7 +320,7 @@ class plotlyzer(Visualizer):
             ),
             showlegend=False,
             hovermode="closest",
-            template="plotly_dark",
+            template="plotly_white",
             autosize=True,
             margin=dict(l=35, r=35, b=35, t=55),
         )
