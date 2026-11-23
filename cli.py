@@ -17,10 +17,19 @@ def main() -> int:
         action="store_true",
         help="Open the optional Pygame simulation viewer",
     )
+    parser.add_argument(
+        "--capacity-info",
+        action="store_true",
+        help="Show node and connection capacity usage after each turn",
+    )
     args = parser.parse_args()
 
     try:
-        run_simulation(args.map_file, visualize=args.visualize)
+        run_simulation(
+            args.map_file,
+            visualize=args.visualize,
+            capacity_info=args.capacity_info,
+        )
     except (OSError, ValueError, RuntimeError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
