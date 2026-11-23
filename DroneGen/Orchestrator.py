@@ -24,7 +24,7 @@ class orchestrator(flychestrator):
         while not all(drone.delivered for drone in drones):
             # Primero se decide el turno completo, sin modificar el grafo.
             intents = planner.collect_intents(drones, routes, graph)
-            approved = planner.resolve_movements(intents, graph)
+            approved = planner.resolve_movements(intents, graph, routes)
 
             if not approved:
                 rerouted = self.reassign_stalled_drones(
@@ -34,7 +34,7 @@ class orchestrator(flychestrator):
                     intents = planner.collect_intents(
                         drones, routes, graph
                     )
-                    approved = planner.resolve_movements(intents, graph)
+                    approved = planner.resolve_movements(intents, graph, routes)
                 if not approved:
                     raise ValueError(
                         "Simulation cannot advance: no movements approved"
