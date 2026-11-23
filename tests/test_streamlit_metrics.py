@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ui.interface.app import PlaybackController
+from ui.interface.app import FlyInApp, PlaybackController
 from ui.interface.turn_view import TurnFigureView
 from ui.visualizer.simulation_service import (
     SimulationData,
@@ -116,6 +116,12 @@ def test_turn_view_hides_plotly_controls() -> None:
     assert len(figure.frames) == frame_count
     assert len(figure.layout.sliders) == 1
 
+
+
+def test_map_selector_contains_only_project_examples() -> None:
+    """Keep the temporary rainbow test map out of the published app."""
+    assert list(FlyInApp.MAPS) == ["Linear map", "Priority map"]
+    assert all((ROOT / path).is_file() for path in FlyInApp.MAPS.values())
 
 def test_app_shows_english_controls_and_metrics() -> None:
     """The Streamlit interface retains navigation across reruns."""
