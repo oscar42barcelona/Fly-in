@@ -4,8 +4,10 @@ from pathlib import Path
 
 import pytest
 
+from DroneGen.base import MovementRecord
 from DroneGen.Flygorithm.Algorithm import Algorithm
-from DroneGen.Graph.Map import Node
+from DroneGen.Graph.Drone import Drone
+from DroneGen.Graph.Map import Graph, Node
 from DroneGen.Graph.MapFactory import Factory
 from DroneGen.Orchestrator import orchestrator
 from input.receiver import receiver
@@ -16,7 +18,9 @@ from ui.visualizer.turn_positions import TurnPositionReplayer
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def build_simulation(map_text: str):
+def build_simulation(
+    map_text: str,
+) -> tuple[Graph, list[Drone], dict[int, list[MovementRecord]]]:
     model = Map_.model_validate(receiver().slicer(map_text.splitlines()))
     graph = Factory().create_graph(model.HUBS, model.CONNECTIONS)
     start = next(node for node in graph.nodes if node.type == HubType.ENTRY)
@@ -52,10 +56,11 @@ def test_animation_tracks_every_drone(filename: str) -> None:
     assert len(figure.layout.updatemenus[0].buttons) == 2
     assert set(states[0]) == {drone.id for drone in drones}
     assert all(
-        position.type == HubType.ENTRY for position in states[0].values()
+        isinstance(position, Node) and position.type == HubType.ENTRY
+        for position in states[0].values()
     )
     assert all(
-        position.type == HubType.EXIT
+        isinstance(position, Node) and position.type == HubType.EXIT
         for position in states[max(states)].values()
     )
 
@@ -87,8 +92,9 @@ connection: restricted-goal
     positions = TurnPositionReplayer(graph).replay(movements)
     drone_id = drones[0].id
     assert positions[1][drone_id] is connection
-    assert isinstance(positions[2][drone_id], Node)
-    assert positions[2][drone_id].name == "restricted"
+    reached = positions[2][drone_id]
+    assert isinstance(reached, Node)
+    assert reached.name == "restricted"
 
     figure = plotlyzer(graph).create_visualization(movements)
     transit = figure.frames[1].data[0]
@@ -124,15 +130,19 @@ def test_html_playback_is_self_contained(tmp_path: Path) -> None:
     assert "Play" in page
 
 
-def test_cli_visualize_calls_plotly_figure(monkeypatch) -> None:
+def test_cli_visualize_calls_plotly_figure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """No graphical display is needed to verify the CLI integration."""
     from plotly.graph_objects import Figure
 
     from input.formatter_algorithm_integrado import main
 
-    output = {}
+    output: dict[str, object] = {}
 
-    def fake_write_html(self, filename, auto_open=False):
+    def fake_write_html(
+        self: Figure, filename: str, auto_open: bool = False
+    ) -> None:
         output["filename"] = filename
         output["auto_open"] = auto_open
         output["frames"] = len(self.frames)

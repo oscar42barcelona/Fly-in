@@ -1,158 +1,162 @@
+"""Read, parse and validate textual Fly-in map files."""
+
+from __future__ import annotations
+
 from sys import argv
-from .validator import Map_
+
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
+from .validator import Map_
+
+
 class receiver:
+    """Convert the map text format into the project's validated model."""
+
     def __init__(self, path: str | None = None) -> None:
+        """Store the map path and line numbers used for error messages."""
         self.path = path
         self.index_hubs: list[int] = []
         self.index_connections: list[int] = []
         self.index_nbdrones: list[int] = []
 
     def reader(self) -> list[str]:
-        """Read the supplied map path or the first CLI argument."""
+        """Read a supplied map or the first command-line argument."""
         path = self.path if self.path is not None else argv[1]
         with open(path, "r", encoding="utf-8") as file:
             return file.readlines()
 
-    def FormatMap(self, line: str) -> dict[str, int | str]:
-        """Formatea la línea que declara nb_drones."""
-        clave, valor = line.split(":", 1)
-        return {clave.strip(): valor.strip()}
+    def FormatMap(self, line: str) -> dict[str, str]:
+        """Read the declared number of drones."""
+        key, value = line.split(":", 1)
+        return {key.strip(): value.strip()}
 
     def typer(self, hub_type: str) -> str:
+        """Classify a hub declaration."""
         if hub_type.startswith("start_hub"):
             return "entry"
-        elif hub_type.startswith("end_hub"):
+        if hub_type.startswith("end_hub"):
             return "exit"
-        else:
-            return "intermediate"
+        return "intermediate"
 
-    def FormatHub(self, line: str, number: int) -> dict[str, int | str]:
-        """Formatea una línea de hub, inicio o destino."""
-        hub_dict: dict[str, int | str] = {}
-        seen = set()
-        meta_hub: list[str] = ["color", "max_drones", "zone"]
+    def FormatHub(self, line: str, number: int) -> dict[str, str]:
+        """Read a hub declaration and its optional attributes."""
+        result: dict[str, str] = {}
+        seen: set[str] = set()
+        permitted = {"color", "max_drones", "zone"}
 
-        if not line.__contains__(':'):
+        if ":" not in line:
             raise ValueError(
-                f"Line {number}: Missing ':'. Content: {line}")
+                f"Line {number}: Missing ':'. Content: {line}"
+            )
 
         hub_type, line = line.split(":", 1)
-        hub_type = hub_type.strip()
-        hub_dict["type"] = self.typer(hub_type)
+        result["type"] = self.typer(hub_type.strip())
 
         line = line.strip()
-        name_coord: str = line
+        name_coord = line
 
-        if '[' in line:
-            name_coord, zone_color_max = line.split("[", 1)
+        if "[" in line:
+            name_coord, features = line.split("[", 1)
             name_coord = name_coord.strip()
-            zone_color_max = zone_color_max.strip()
+            features = features.strip()
 
-            if not zone_color_max.endswith(']'):
+            if not features.endswith("]"):
                 raise ValueError(
-                    f"Line {number}: Missing ']'. Content: {line}")
+                    f"Line {number}: Missing ']'. Content: {line}"
+                )
 
-            zone_color_max = zone_color_max[:-1]
-            zone_color_max = zone_color_max.split(' ', 3)
-
-            for item in zone_color_max:
+            features = features[:-1]
+            for item in features.split(" ", 3):
                 item = item.strip()
-
-                if not item.__contains__('='):
+                if "=" not in item:
                     raise ValueError(
-                    f"Line {number}: Missing '=' or extra space."
-                    f" Content: {line}")
+                        f"Line {number}: Missing '=' or extra space. "
+                        f"Content: {line}"
+                    )
 
-                clave, valor = item.split('=', 1)
-
-                if not clave in meta_hub:
+                key, value = item.split("=", 1)
+                if key not in permitted:
                     raise ValueError(
-                    f"Line {number}: wrong spelling :(."
-                    f" Content: {line}")                
+                        f"Line {number}: wrong spelling :(. "
+                        f"Content: {line}"
+                    )
 
-                if clave in seen:
+                if key in seen:
                     raise ValueError(
                         f"Line {number}: Non repeated features, please :) "
-                        f"Content: {line}")
+                        f"Content: {line}"
+                    )
+                seen.add(key)
+                result[key.strip()] = value.strip()
 
-                seen.add(clave)
-
-                hub_dict[clave.strip()] = valor.strip()
-
-        if name_coord.count(' ') != 2:
+        if name_coord.count(" ") != 2:
             raise ValueError(
-                f"Line {number}: Missing or extra Space. Content: {line}")
+                f"Line {number}: Missing or extra Space. Content: {line}"
+            )
 
-        name, x, y = name_coord.split(' ', 2)
-        hub_dict["name"] = name.strip()
-        hub_dict["x"] = x.strip()
-        hub_dict["y"] = y.strip()
+        name, x, y = name_coord.split(" ", 2)
+        result["name"] = name.strip()
+        result["x"] = x.strip()
+        result["y"] = y.strip()
+        return result
 
-        return hub_dict
-            
+    def FormatConnection(self, line: str, number: int) -> dict[str, str]:
+        """Read a link declaration and optional capacity metadata."""
+        result: dict[str, str] = {}
 
-    def FormatConnection(self, line: str, number: int) -> dict[str, int | str]:
-        """Formatea una línea de conexión."""
-        connections_dict: dict[str, int | str] = {}
-        seen = set()
-
-        if not line.__contains__(':'):
+        if ":" not in line:
             raise ValueError(
-                f"Line {number}: Missing ':'. Content: {line}")
+                f"Line {number}: Missing ':'. Content: {line}"
+            )
 
         line = line.split(":", 1)[1].strip()
+        connection_text = line
 
-        connections: str = line
+        if "[" in line:
+            connection_text, capacity = line.split("[", 1)
+            capacity = capacity.strip()
 
-        if '[' in line:
-            connections, link_capacity = line.split("[", 1)
-            link_capacity = link_capacity.strip()
-        
-            if not link_capacity.endswith(']'):
+            if not capacity.endswith("]"):
                 raise ValueError(
-                    f"Line {number}: Missing ']'. Content: {line}")
+                    f"Line {number}: Missing ']'. Content: {line}"
+                )
 
-            link_capacity = link_capacity[:-1].strip()
-            if link_capacity.count(" "):
+            capacity = capacity[:-1].strip()
+            if " " in capacity:
                 raise ValueError(
-                f"Line {number}: Extra Space or args. Content: {line}")
+                    f"Line {number}: Extra Space or args. Content: {line}"
+                )
 
-            if not link_capacity.__contains__('='):
-                    raise ValueError(
-                    f"Line {number}: Missing '='. Content: {line}")
+            if "=" not in capacity:
+                raise ValueError(
+                    f"Line {number}: Missing '='. Content: {line}"
+                )
 
-            key_capacity, value_capacity = link_capacity.split('=', 1)
-            
-            if key_capacity.strip() != "max_link_capacity":
+            key, value = capacity.split("=", 1)
+            if key.strip() != "max_link_capacity":
                 raise ValueError(
                     f"Line {number}: Invalid connection capacity key. "
                     f"Content: {line}"
                 )
+            result["link_capacity"] = value.strip()
 
-            connections_dict["link_capacity"] = value_capacity.strip()
+        connection_text = connection_text.strip()
+        if "-" not in connection_text:
+            raise ValueError(
+                f"Line {number}: Missing '-'. Content: {line}"
+            )
 
-        connections = connections.strip()
+        hub1, hub2 = connection_text.split("-", 1)
+        result["hub1"] = hub1.strip()
+        result["hub2"] = hub2.strip()
+        return result
 
-        if not connections.__contains__('-'):
-                    raise ValueError(
-                    f"Line {number}: Missing '-'. Content: {line}")
-        
-        hub1, hub2 = connections.split('-', 1)
-        hub1 = hub1.strip()
-        hub2 = hub2.strip()
-
-        connections_dict["hub1"] = hub1
-        connections_dict["hub2"] = hub2
-
-        return connections_dict
-        
     def slicer(self, lines: list[str]) -> dict[str, object]:
-        hubs: list[dict[str, int | str]] = []
-        connections: list[dict[str, int | str]] = []
-        mapa: dict[str, object] = {}
+        """Split declarations into hubs, connections and map metadata."""
+        hubs: list[dict[str, str]] = []
+        connections: list[dict[str, str]] = []
+        data: dict[str, object] = {}
 
         first_data_line = True
         for number, line in enumerate(lines, start=1):
@@ -169,7 +173,7 @@ class receiver:
                 first_data_line = False
 
             if line.startswith("nb_drones:"):
-                mapa.update(self.FormatMap(line))
+                data.update(self.FormatMap(line))
                 self.index_nbdrones.append(number)
 
             elif line.startswith(("start_hub:", "end_hub:", "hub:")):
@@ -178,9 +182,9 @@ class receiver:
                 self.index_hubs.append(number)
 
                 if line.startswith("start_hub:"):
-                    mapa["start_hub"] = hub["name"]
+                    data["start_hub"] = hub["name"]
                 elif line.startswith("end_hub:"):
-                    mapa["end_hub"] = hub["name"]
+                    data["end_hub"] = hub["name"]
 
             elif line.startswith("connection:"):
                 connection = self.FormatConnection(line, number)
@@ -188,59 +192,71 @@ class receiver:
                 self.index_connections.append(number)
             else:
                 raise ValueError(
-                    f"Line {number}: Unknown prefix. Content: {line}")
+                    f"Line {number}: Unknown prefix. Content: {line}"
+                )
 
-        mapa["Hubs"] = hubs
-        mapa["Connections"] = connections
-
-        return mapa
+        data["Hubs"] = hubs
+        data["Connections"] = connections
+        return data
 
     def context_creator(self) -> dict[str, list[int]]:
+        """Provide source line numbers for field validation errors."""
+        return {
+            "nb_drones": self.index_nbdrones,
+            "Hubs": self.index_hubs,
+            "Connections": self.index_connections,
+        }
 
-        context: dict[str, list[int]] = {}
-
-        context["nb_drones"] = self.index_nbdrones
-        context["Hubs"] = self.index_hubs
-        context["Connections"] = self.index_connections
-
-        return context
-
-    def print_error(self, item: ErrorDetails, Context: dict[str, list[int]]):
+    def print_error(
+        self, item: ErrorDetails, context: dict[str, list[int]]
+    ) -> None:
+        """Print a Pydantic validation error with its source line."""
         loc = item["loc"]
-        len_loc = len(loc)                                   
+        size = len(loc)
 
         if loc and loc[0] == "nb_drones":
-            print(f"Error in {loc} line: {Context[loc[0]]}", end=". ")
-        elif item["type"] == "custom_validation_error": 
-            ctx = item["ctx"]
-            clave, valor = next(iter(ctx.items()))
-            if loc:
-                print(f"Error in {loc} line: {Context[clave][valor]}", end=". ")
-            else:
-                print(f"Error in line: {Context[clave][valor]}", end=". ")
-        elif len_loc > 1:
-            print(f"Error in {loc} line: {Context[loc[0]][loc[1]]}", end=". ")
-        
+            print(f"Error in {loc} line: {context['nb_drones']}", end=". ")
+        elif item["type"] == "custom_validation_error":
+            details = item.get("ctx") or {}
+            if details:
+                key, index = next(iter(details.items()))
+                key = str(key)
+                if isinstance(index, int) and key in context:
+                    if loc:
+                        print(
+                            f"Error in {loc} line: {context[key][index]}",
+                            end=". ",
+                        )
+                    else:
+                        print(
+                            f"Error in line: {context[key][index]}",
+                            end=". ",
+                        )
+        elif size > 1:
+            location = str(loc[0])
+            index = loc[1]
+            if location in context and isinstance(index, int):
+                print(
+                    f"Error in {loc} line: {context[location][index]}",
+                    end=". ",
+                )
+
         print(item["msg"])
-        #print(item["input"])
-    
-        
+
     def Process(self) -> Map_ | None:
+        """Read, parse and validate the map; print input errors if needed."""
         try:
-            list_lines: list[str] = self.reader()
-            dictforpy: dict[str, object] = self.slicer(list_lines)
-            Context: dict[str, list[int]] = self.context_creator()
-
-            return Map_.model_validate(dictforpy, context=Context)
-
-        except IndexError as error:
-            print(f"We need a map to run :)")
-        except FileNotFoundError as error:
-            print(error)
-        except PermissionError as error:
+            lines = self.reader()
+            parsed = self.slicer(lines)
+            context = self.context_creator()
+            return Map_.model_validate(parsed, context=context)
+        except IndexError:
+            print("We need a map to run :)")
+        except (FileNotFoundError, PermissionError) as error:
             print(error)
         except ValidationError as error:
             for item in error.errors():
-                self.print_error(item, Context)
+                self.print_error(item, context)
         except ValueError as error:
             print(error)
+        return None

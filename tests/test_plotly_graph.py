@@ -23,7 +23,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_figure_draws_connections_before_nodes(filename: str) -> None:
     """Preserve map geometry and keep zones visible over connections."""
     model = Map_.model_validate(
-        receiver().slicer((ROOT / filename).read_text(encoding="utf-8").splitlines())
+        receiver().slicer(
+            (ROOT / filename).read_text(encoding="utf-8").splitlines()
+        )
     )
     graph = Factory().create_graph(model.HUBS, model.CONNECTIONS)
     figure = plotlyzer(graph).create_figure()
@@ -41,7 +43,8 @@ def test_figure_draws_connections_before_nodes(filename: str) -> None:
     assert list(zones.y) == [node.y for node in graph.nodes]
     assert list(zones.text) == [node.name for node in graph.nodes]
     assert list(zones.customdata) == [
-        [node.type.value, node.zone.value, node.capacity] for node in graph.nodes
+        [node.type.value, node.zone.value, node.capacity]
+        for node in graph.nodes
     ]
     assert figure.layout.yaxis.scaleanchor == "x"
     assert figure.layout.yaxis.scaleratio == 1
@@ -49,7 +52,7 @@ def test_figure_draws_connections_before_nodes(filename: str) -> None:
 
 
 def test_priority_and_restricted_zones_have_distinct_metadata() -> None:
-    """Zone types and custom map colors must be represented in the Plotly figure."""
+    """Represent zone types and custom colors in the Plotly figure."""
     path = ROOT / "maps/medium/03_priority_puzzle.txt"
     model = Map_.model_validate(
         receiver().slicer(path.read_text(encoding="utf-8").splitlines())

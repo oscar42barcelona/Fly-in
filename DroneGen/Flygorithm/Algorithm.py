@@ -51,7 +51,7 @@ class Algorithm(flygorithm):
             priority_penalty += node.zone.priority
         return cost, priority_penalty
 
-    # CAMBIO 5: Dijkstra reutilizable para la ruta inicial y los desvios de Yen.
+    # CAMBIO 5: Dijkstra reutilizable para la ruta y sus desvios.
     # Sustituye la busqueda anterior que gestionaba el heap manualmente.
     def _shortest_path(
         self,
@@ -105,7 +105,7 @@ class Algorithm(flygorithm):
                     (
                         score[0],
                         score[1],
-                        next(serial),  # Evita comparar objetos Node en empates.
+                        next(serial),  # Evita comparar nodos en empates.
                         neighbor,
                         path + (neighbor,),
                     ),
@@ -175,7 +175,7 @@ class Algorithm(flygorithm):
                 if candidate in known:
                     continue
                 known.add(candidate)
-                # Antes Yen ordenaba solo por coste; ahora desempata por prioridad.
+                # Yen desempata por prioridad cuando hay costes iguales.
                 cost, penalty = self._rank(candidate)
                 heappush(
                     candidates,

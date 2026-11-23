@@ -15,7 +15,9 @@ from input.validator import HubType, Map_
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def simulate(text: str, max_turns: int = 100) -> list[list[tuple[int, MovementKind]]]:
+def simulate(
+    text: str, max_turns: int = 100
+) -> list[list[tuple[int, MovementKind]]]:
     """Execute real planning steps and verify invariants after every turn."""
     model = Map_.model_validate(receiver().slicer(text.splitlines()))
     factory = Factory()
