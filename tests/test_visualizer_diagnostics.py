@@ -73,3 +73,28 @@ def test_visualizer_detects_invalid_post_delivery_movement() -> None:
     }
     _, metadata = _prepare(graph, events, start_name=None)
     assert any("moved after delivery" in issue.message for issue in metadata["issues"])
+
+
+def test_visualizer_tracks_restricted_transit_without_false_alarm() -> None:
+    """The viewer must place a drone on its edge and then at its destination."""
+    map_text = """
+nb_drones: 1
+start_hub: start 0 0
+hub: restricted 1 0 [zone=restricted]
+end_hub: goal 2 0
+connection: start-restricted [max_link_capacity=1]
+connection: restricted-goal [max_link_capacity=1]
+"""
+    model = Map_.model_validate(receiver().slicer(map_text.splitlines()))
+    factory = Factory()
+    graph = factory.create_graph(model.HUBS, model.CONNECTIONS)
+    start = next(node for node in graph.nodes if node.type == HubType.ENTRY)
+    drone = factory.create_drones(1, start)[0]
+    routes = Algorithm().solve(drone, graph, 1)
+    movements = orchestrator().plan([drone], routes, graph)
+
+    snapshots, metadata = _prepare(graph, movements, start_name=None)
+    assert not metadata["issues"], [issue.message for issue in metadata["issues"]]
+    assert snapshots[1].positions[drone.id] == "edge:start-restricted"
+    assert snapshots[2].positions[drone.id] == "restricted"
+    assert snapshots[-1].positions[drone.id] == "goal"
