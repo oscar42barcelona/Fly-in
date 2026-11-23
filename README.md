@@ -170,6 +170,21 @@ The initial route allocation and greedy conflict resolution are
 heuristics; finding several shortest paths does not guarantee globally
 optimal multi-drone scheduling on every possible map.
 
+## Mandatory verification and parser errors
+
+Malformed map data produces a clear error on standard error, including
+the source line and field or cause, and the CLI returns a nonzero exit
+status. A syntactically valid but disconnected map is also reported
+without an uncaught traceback. Pressing **Ctrl+C** during execution
+stops the CLI with exit status 130 and a concise interruption message.
+
+In addition to the shipped examples, the automated test suite covers
+unseen valid maps, invalid metadata, occupancy limits, two-turn
+restricted crossings and real SIGINT interruption.
+
+For the object-oriented module audit and step-by-step local acceptance
+commands, see [Mandatory Submission Audit](docs/submission-audit.md).
+
 ## Mandatory subject benchmarks
 
 The subject requires no more than **125% of the optimal turn count**
