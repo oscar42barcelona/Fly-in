@@ -1,3 +1,5 @@
+"""Abstract simulation orchestrator and immutable movement records."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -7,14 +9,12 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .Graph.Drone import Drone
-    from .Graph.Map import Node, Graph
+    from .Graph.Map import Graph, Node
+
 
 class State(Enum):
-    """
-    MOVEMENT = Movimiento hacia otro nodo, incluido end_hub
-    TRANSIT = Dron en tránsito hacia una zona restricted
-    STAY = Dron que permanece en el mismo nodo
-    """
+    """A drone's state after its approved movement in one turn."""
+
     MOVEMENT = "movement"
     TRANSIT = "transit"
     STAY = "stay"
@@ -22,19 +22,15 @@ class State(Enum):
 
 @dataclass(frozen=True)
 class MovementRecord:
-    """
-    drone_id = Identificador del dron
-    state = Situación registrada
-    location = Identificador del nodo o conexión
-    """
+    """The identity, state and location of one drone after a turn."""
+
     drone_id: int
     state: State
-    location: str    
+    location: str
 
 
 class flychestrator(ABC):
-    """Este algorimto debe de encargarse de transportar
-        los drones desde start_hub hasta end_hub"""
+    """Define the interface for coordinating drone moves by turn."""
 
     @abstractmethod
     def plan(
@@ -42,15 +38,6 @@ class flychestrator(ABC):
         drones: list[Drone],
         routes: dict[int, tuple[int, tuple[Node, ...]]],
         graph: Graph,
-        ) -> dict[int, list[MovementRecord]]:
-        """Parametros:
-            - drones: Drones que participarán en la simulación.
-            - Map: Objeto que contiene la red, conexiones y restricciones.
-            - routes: rutas eficientes con sus costos acumulados.
-        salida:
-            - diccionario donde cada clave representa un turno 
-            y cada valor contiene los registros correspondientes.
-        error:
-            si no existe una ruta posible desde el inicio hasta el destino
-        """
-        pass
+    ) -> dict[int, list[MovementRecord]]:
+        """Return a chronological record of each turn's movements."""
+        raise NotImplementedError
