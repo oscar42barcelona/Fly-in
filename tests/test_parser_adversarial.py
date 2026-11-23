@@ -109,10 +109,12 @@ INVALID_CASES = [
                    "hub: middle 2 0\nend_hub: goal 3 0"),
      "unique"),
     ("missing-entry",
-     VALID.replace("start_hub: start 0 0\n", ""),
+     VALID.replace("start_hub: start 0 0\n", "")
+     .replace("connection: start-middle\n", ""),
      "Field required"),
     ("missing-exit",
-     VALID.replace("end_hub: goal 2 0\n", ""),
+     VALID.replace("end_hub: goal 2 0\n", "")
+     .replace("connection: middle-goal\n", ""),
      "Field required"),
     ("unrecognized-prefix", VALID + "teleport: middle-goal\n",
      "Unknown prefix"),
