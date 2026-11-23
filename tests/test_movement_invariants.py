@@ -33,9 +33,9 @@ def simulate(
     while not all(drone.delivered for drone in drones):
         assert len(turns) < max_turns, "Simulation did not terminate"
         proposed = planner.collect_intents(drones, routes, graph)
-        approved = planner.resolve_movements(proposed, graph)
+        approved = planner.resolve_movements(proposed, graph, routes)
         assert approved, "No movement was approved"
-        assert planner.fits_capacities(approved, graph)
+        assert planner.fits_capacities(approved, graph, routes)
 
         turn = [(intent.drone.id, intent.kind) for intent in approved]
         planner.execute_movements(approved)
@@ -110,5 +110,5 @@ connection: restricted-goal [max_link_capacity=1]
     turns = simulate(text)
     assert (1, MovementKind.START_TRANSIT) in turns[0]
     assert (1, MovementKind.END_TRANSIT) in turns[1]
-    assert (2, MovementKind.START_TRANSIT) in turns[2]
-    assert (2, MovementKind.END_TRANSIT) in turns[3]
+    assert (2, MovementKind.START_TRANSIT) in turns[1]
+    assert (2, MovementKind.END_TRANSIT) in turns[2]
