@@ -47,3 +47,32 @@ def test_help_lists_visualization_flag() -> None:
     result = run_cli("--help")
     assert result.returncode == 0
     assert "--visualize" in result.stdout
+
+
+def test_simple_fork_meets_turn_limit() -> None:
+    """Four drones must use both branches within the 125% turn budget."""
+    result = run_cli("maps/easy/02_simple_fork.txt")
+    assert result.returncode == 0, result.stderr
+    lines = result.stdout.strip().splitlines()
+    assert len(lines) <= 5, f"Expected at most 5 turns, got {len(lines)}"
+    assert sum(line.count("-goal") for line in lines) == 4
+    assert any("-path_a" in line for line in lines)
+    assert any("-path_b" in line for line in lines)
+
+
+def test_basic_capacity_meets_turn_limit() -> None:
+    """The capacity map must not exceed five simulation turns."""
+    result = run_cli("maps/easy/03_basic_capacity.txt")
+    assert result.returncode == 0, result.stderr
+    lines = result.stdout.strip().splitlines()
+    assert len(lines) <= 5, f"Expected at most 5 turns, got {len(lines)}"
+    assert sum(line.count("-goal") for line in lines) == 4
+
+
+def test_priority_puzzle_meets_turn_limit() -> None:
+    """Five drones must finish within seven turns (125% of six)."""
+    result = run_cli("maps/medium/03_priority_puzzle.txt")
+    assert result.returncode == 0, result.stderr
+    lines = result.stdout.strip().splitlines()
+    assert len(lines) <= 7, f"Expected at most 7 turns, got {len(lines)}"
+    assert sum(line.count("-goal") for line in lines) == 5
