@@ -16,3 +16,4 @@ typing_extensions==4.16.0
 plotly==6.3.0
 pygame==2.6.1
 pydantic==2.14.3
+streamlit
