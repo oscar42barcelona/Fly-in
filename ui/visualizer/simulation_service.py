@@ -51,7 +51,7 @@ class SimulationService:
         positions: TurnPositions,
         movements: dict[int, list[MovementRecord]],
     ) -> dict[int, TurnMetrics]:
-        """Count drones from historical snapshots, not final graph occupancy."""
+        """Count drones using historical positions, not final occupancy."""
         result: dict[int, TurnMetrics] = {}
 
         for turn, places in positions.items():
