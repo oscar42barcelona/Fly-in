@@ -4,13 +4,16 @@ from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 class receiver:
-    index_hubs: list[int]= []
-    index_connections: list[int]= []
-    index_nbdrones: list[int]= []
-    
+    def __init__(self, path: str | None = None) -> None:
+        self.path = path
+        self.index_hubs: list[int] = []
+        self.index_connections: list[int] = []
+        self.index_nbdrones: list[int] = []
+
     def reader(self) -> list[str]:
-        """Lee las líneas del archivo indicado como argumento."""
-        with open(argv[1], "r") as file:
+        """Read the supplied map path or the first CLI argument."""
+        path = self.path if self.path is not None else argv[1]
+        with open(path, "r", encoding="utf-8") as file:
             return file.readlines()
 
     def FormatMap(self, line: str) -> dict[str, int | str]:
