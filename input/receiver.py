@@ -300,7 +300,9 @@ class receiver:
                 line_number = indices[category][index]
                 break
 
-        return f"Line {line_number}: {error['msg']}"
+        field = ".".join(str(part) for part in location)
+        reason = f"{field}: {error['msg']}" if field else error["msg"]
+        return f"Line {line_number}: {reason}"
 
     def Process(self) -> Map_ | None:
         """Retain the historical non-raising parser interface."""
