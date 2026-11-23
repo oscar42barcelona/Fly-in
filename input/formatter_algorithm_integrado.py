@@ -8,8 +8,9 @@ from DroneGen.Orchestrator import orchestrator
 from ui.visualizer.render_tester import launch
 
 
-def main() -> None:
-    raw_map = receiver().Process()
+def main(map_path: str | None = None, visualize: bool = False) -> None:
+    """Parse a map, schedule its drones, and print the turn-by-turn moves."""
+    raw_map = receiver(map_path).Process()
     if not raw_map:
         raise ValueError("No se ha recibido un mapa")
 
@@ -37,14 +38,15 @@ def main() -> None:
     routes = Algorithm().solve(drones[0], graph, model.NB_DRONES)
     movements = orchestrator().plan(drones, routes, graph)
 
-    for turn, records in movements.items():
+    for records in movements.values():
         moves = " ".join(
             f"D{record.drone_id}-{record.location}"
             for record in records
         )
-        print(f"TURN {turn}: {moves}")
+        print(moves)
 
-    launch(graph, movements, start_name=start.name)
+    if visualize:
+        launch(graph, movements, start_name=start.name)
 
 
 if __name__ == "__main__":
