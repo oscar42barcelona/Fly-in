@@ -3,7 +3,9 @@
 from DroneGen.base import State
 from DroneGen.Graph.Drone import Drone
 from DroneGen.Graph.Map import Connection, Graph, Node
-from DroneGen.Planning.base import MovementIntent, MovementKind, BaseTurnPlanner
+from DroneGen.Planning.base import (
+    MovementIntent, MovementKind, BaseTurnPlanner,
+)
 from input.validator import Zone
 
 
@@ -137,7 +139,10 @@ class TurnPlanner(BaseTurnPlanner):
                 or drone not in origin.drones
             ):
                 raise ValueError("Invalid movement origin")
-            if self.find_connection(origin, intent.destination, graph) is not connection:
+            if (
+                self.find_connection(origin, intent.destination, graph)
+                is not connection
+            ):
                 raise ValueError("Movement uses an incorrect connection")
             expected_kind = (
                 MovementKind.START_TRANSIT
@@ -162,7 +167,7 @@ class TurnPlanner(BaseTurnPlanner):
             connection: len(connection.drones)
             for connection in graph.connections
         }
-        #Aqui actualizamos los drones que estaran en las conexiones o nodos.
+        # Aqui actualizamos los drones que estaran en las conexiones o nodos.
         for intent in intents:
             if intent.kind == MovementKind.END_TRANSIT:
                 link_usage[intent.connection] -= 1
@@ -199,7 +204,7 @@ class TurnPlanner(BaseTurnPlanner):
         Criterio conservador: ninguna salida futura libera una reserva.
         """
         occupancy = {node: len(node.drones) for node in graph.nodes}
-        #primer bucle movimientos de ette turno
+        # primer bucle movimientos de ette turno
         for intent in intents:
             if intent.kind == MovementKind.END_TRANSIT:
                 occupancy[intent.destination] += 1
@@ -210,11 +215,11 @@ class TurnPlanner(BaseTurnPlanner):
                 occupancy[origin] -= 1
                 if intent.kind == MovementKind.NORMAL:
                     occupancy[intent.destination] += 1
-        #reserva para los restricted
+        # reserva para los restricted
         for intent in intents:
             if intent.kind == MovementKind.START_TRANSIT:
                 occupancy[intent.destination] += 1
-        #devuelvo solo los nodos en los que se prevee probblma de ocupacion
+        # devuelvo solo los nodos en los que se prevee probblma de ocupacion
         return [
             node for node in graph.nodes
             if node.type not in ("entry", "exit")
@@ -239,7 +244,7 @@ class TurnPlanner(BaseTurnPlanner):
         La seleccion es voraz; no garantiza el minimo global de turnos.
         """
         self.validate_intents(intents, graph)
-        #Esta línea crea una nueva lista con los mismos elementos que intents.
+        # Esta línea crea una nueva lista con los mismos elementos que intents.
         approved = list(intents)
 
         while True:
@@ -313,7 +318,7 @@ class TurnPlanner(BaseTurnPlanner):
             approved.remove(removable)
 
     def execute_movements(self, approved: list[MovementIntent]) -> None:
-        """Aplica un conjunto previamente aprobado sin decisiones intermedias."""
+        """Apply previously approved movements without further decisions."""
         # Fase 1: liberar los nodos de origen y las conexiones finalizadas.
         for intent in approved:
             if intent.kind == MovementKind.END_TRANSIT:
@@ -326,7 +331,9 @@ class TurnPlanner(BaseTurnPlanner):
 
         # Fase 2: realizar llegadas. Todas las salidas ya estan aplicadas.
         for intent in approved:
-            if intent.kind not in (MovementKind.NORMAL, MovementKind.END_TRANSIT):
+            if intent.kind not in (
+                MovementKind.NORMAL, MovementKind.END_TRANSIT
+            ):
                 continue
             drone = intent.drone
             destination = intent.destination
@@ -336,7 +343,7 @@ class TurnPlanner(BaseTurnPlanner):
                 drone.headed_to = None
             drone.move_to_node(destination)
 
-        # Fase 3: iniciar conexiones restringidas que duran hasta el proximo turno.
+        # Fase 3: iniciar cruces restringidos de dos turnos.
         for intent in approved:
             if intent.kind != MovementKind.START_TRANSIT:
                 continue
