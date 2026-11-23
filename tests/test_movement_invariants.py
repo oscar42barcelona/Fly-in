@@ -114,7 +114,6 @@ connection: restricted-goal [max_link_capacity=1]
     assert (2, MovementKind.END_TRANSIT) in turns[2]
 
 
-
 @pytest.mark.parametrize(
     "text",
     [
