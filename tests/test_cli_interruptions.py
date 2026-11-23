@@ -39,10 +39,11 @@ def test_real_sigint_interrupts_cli_cleanly() -> None:
     """Send a real signal to an executing Python CLI process."""
     script = (
         "import cli, sys, time\n"
-        "cli.run_simulation = "
-        "lambda *args, **kwargs: time.sleep(30)\n"
+        "def wait_for_signal(*args, **kwargs):\n"
+        "    print('READY', flush=True)\n"
+        "    time.sleep(30)\n"
+        "cli.run_simulation = wait_for_signal\n"
         "sys.argv = ['cli.py', 'dummy.txt']\n"
-        "print('READY', flush=True)\n"
         "raise SystemExit(cli.main())\n"
     )
     process = subprocess.Popen(
