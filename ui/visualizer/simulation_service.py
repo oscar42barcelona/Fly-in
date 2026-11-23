@@ -88,10 +88,7 @@ class SimulationService:
 
     def build(self) -> SimulationData:
         """Run the existing engine and return a prepared visual simulation."""
-        model = receiver(self.path).Process()
-        if model is None:
-            raise ValueError("Unable to load the selected map")
-
+        model = receiver(self.path).load()
         factory = Factory()
         graph = factory.create_graph(
             hubs=model.HUBS,
