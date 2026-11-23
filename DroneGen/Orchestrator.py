@@ -1,8 +1,10 @@
 """Coordina los turnos de Fly-in mediante TurnPlanner."""
 
+from collections import Counter
+
 from DroneGen.base import MovementRecord, flychestrator
 from DroneGen.Graph.Drone import Drone
-from DroneGen.Graph.Map import Graph, Node
+from DroneGen.Graph.Map import Connection, Graph, Node
 from DroneGen.Planning.base import MovementIntent, MovementKind
 from DroneGen.Planning.TurnPlanner import TurnPlanner
 
@@ -19,6 +21,9 @@ class orchestrator(flychestrator):
         planner = TurnPlanner()
         self.assign_initial_routes(drones, routes)
         movements_by_turn: dict[int, list[MovementRecord]] = {}
+        self.capacity_by_turn: dict[
+            int, tuple[dict[Node, int], dict[Connection, int]]
+        ] = {}
         turn = 0
 
         while not all(drone.delivered for drone in drones):
@@ -39,6 +44,19 @@ class orchestrator(flychestrator):
                 self.movement_record(intent)
                 for intent in approved
             ]
+
+            # Capture the occupancy after this turn, before the next one.
+            normal_links = Counter(
+                intent.connection for intent in approved
+                if intent.kind == MovementKind.NORMAL
+            )
+            self.capacity_by_turn[turn] = (
+                {node: len(node.drones) for node in graph.nodes},
+                {
+                    connection: len(connection.drones) + normal_links[connection]
+                    for connection in graph.connections
+                },
+            )
 
         return movements_by_turn
 
