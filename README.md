@@ -65,3 +65,28 @@ flyin/
 - `terminal.py`: formats and prints simulation movements using the required terminal output format.
 
 The translation into visual properties belongs to `visualizer/`, keeping the graph logic independent of Plotly. Directory names describe responsibilities rather than technologies.
+
+## Streamlit turn explorer
+
+Install dependencies in a virtual environment, then start the local visualizer
+from the repository root:
+
+```bash
+python3 -m pip install -r dependencies.txt
+python3 -m streamlit run tes_streamlit_turnos.py
+```
+
+Choose a map and use **Anterior** / **Siguiente** to inspect each completed
+simulation turn. The summary shows drones delivered to the exit, drones
+occupying a connection in restricted transit, and drones waiting in a node
+without moving during that turn. Turn zero reports no waiting drones.
+
+The simulation is calculated once per map version and cached for navigation.
+Editing a map invalidates its cached result. Stop the Streamlit server with
+**Ctrl+C** in the terminal; closing the browser tab does not stop the server.
+
+The standard command-line simulation remains independent of Streamlit:
+
+```bash
+python3 cli.py maps/easy/01_linear_path.txt
+```
