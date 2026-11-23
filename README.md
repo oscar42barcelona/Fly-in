@@ -17,6 +17,21 @@ turn and must arrive at the zone during the next.
 The project includes command-line movement output, a Plotly map and turn
 animation, and a Streamlit interface with playback and drone metrics.
 
+Map labels are shown on hover to keep large networks readable; only the
+entry and exit labels remain visible. Drone IDs appear on hover instead of
+crowding the graph. Zone categories use different marker shapes, while
+valid custom colors are preserved. The special single-word value
+`color=rainbow` displays as a seven-color concentric marker (Plotly does
+not accept `rainbow` as a single CSS color). Other unrecognized color names
+fall back to the zone category color without affecting map parsing.
+
+To inspect it directly, select **Rainbow demo** in Streamlit or run:
+
+```bash
+python3 cli.py maps/demo/01_rainbow.txt --visualize
+```
+
+
 ## Instructions
 
 ### Installation
