@@ -2,9 +2,42 @@
 
 from DroneGen.base import MovementRecord, State, flychestrator
 from DroneGen.Graph.Drone import Drone
-from DroneGen.Graph.Map import Graph, Node
+from DroneGen.Graph.Map import Connection, Graph, Node
 from DroneGen.Planning.base import MovementIntent, MovementKind
 from DroneGen.Planning.TurnPlanner import TurnPlanner
+
+
+StateKey = tuple[
+    int, Node | None, Connection | None, Node | None, State, int, bool
+]
+
+
+class SimulationProgressGuard:
+    """Detect a repeated global state before it becomes an infinite loop."""
+
+    def __init__(self) -> None:
+        """Record states already visited by the deterministic scheduler."""
+        self._seen: set[tuple[StateKey, ...]] = set()
+
+    def observe(self, drones: list[Drone]) -> None:
+        """Raise if the same routing and occupancy state recurs."""
+        state: tuple[StateKey, ...] = tuple(
+            (
+                drone.id,
+                drone.current_node,
+                drone.current_connection,
+                drone.headed_to,
+                drone.state,
+                drone.current_route,
+                drone.delivered,
+            )
+            for drone in drones
+        )
+        if state in self._seen:
+            raise ValueError(
+                "Simulation cannot progress: repeated drone state"
+            )
+        self._seen.add(state)
 
 
 class orchestrator(flychestrator):
@@ -20,8 +53,10 @@ class orchestrator(flychestrator):
         self.assign_initial_routes(drones, routes)
         movements_by_turn: dict[int, list[MovementRecord]] = {}
         turn = 0
+        progress = SimulationProgressGuard()
 
         while not all(drone.delivered for drone in drones):
+            progress.observe(drones)
             # Primero se decide el turno completo, sin modificar el grafo.
             intents = planner.collect_intents(drones, routes, graph)
             approved = planner.resolve_movements(intents, graph, routes)

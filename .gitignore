@@ -30,3 +30,11 @@ htmlcov/
 # Temporary files
 *.tmp
 *.swp
+
+# Local environment symlinks
+.venv2
+
+# Generated preview files are local outputs, not source code
+flyin_preview.html
+mapa_test.html
+ui/visualizer/*.html

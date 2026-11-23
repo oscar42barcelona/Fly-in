@@ -13,8 +13,9 @@ debug:
 	$(PYTHON) -m pdb cli.py $(MAP)
 
 clean:
-	find . -type d -name __pycache__ -prune -exec rm -rf {} +
+	find . -type d \( -name .venv -o -name venv -o -name env \) -prune -o -type d -name __pycache__ -prune -exec rm -rf {} +
 	rm -rf .pytest_cache .mypy_cache
+	rm -f flyin_preview.html mapa_test.html ui/visualizer/animacion_prueba.html
 
 lint:
 	$(PYTHON) -m flake8 .

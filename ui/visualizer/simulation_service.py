@@ -11,11 +11,8 @@ from dataclasses import dataclass
 from plotly.graph_objects import Figure
 
 from DroneGen.base import MovementRecord, State
-from DroneGen.Flygorithm.Algorithm import Algorithm
 from DroneGen.Graph.Map import Connection, Node
-from DroneGen.Graph.MapFactory import Factory
-from DroneGen.Orchestrator import orchestrator
-from input.receiver import receiver
+from input.formatter_algorithm_integrado import SimulationRunner
 from input.validator import HubType
 from ui.visualizer.plotly_test import plotlyzer
 from ui.visualizer.turn_positions import TurnPositions, TurnPositionReplayer
@@ -87,32 +84,14 @@ class SimulationService:
         return result
 
     def build(self) -> SimulationData:
-        """Run the existing engine and return a prepared visual simulation."""
-        model = receiver(self.path).Process()
-        if model is None:
-            raise ValueError("Unable to load the selected map")
-
-        factory = Factory()
-        graph = factory.create_graph(
-            hubs=model.HUBS,
-            connections=model.CONNECTIONS,
-        )
-        start = next(
-            (node for node in graph.nodes if node.type == HubType.ENTRY),
-            None,
-        )
-        if start is None:
-            raise ValueError("The map has no entry node")
-
-        drones = factory.create_drones(model.NB_DRONES, start)
-        routes = Algorithm().solve(drones[0], graph, model.NB_DRONES)
-        movements = orchestrator().plan(drones, routes, graph)
-
+        """Build metrics and Plotly frames from the shared engine result."""
+        result = SimulationRunner(self.path).simulate()
+        graph, movements = result.graph, result.movements
         positions = TurnPositionReplayer(graph).replay(movements)
         metrics = self.calculate_turn_metrics(positions, movements)
         figure = plotlyzer(graph).create_visualization(movements)
         return SimulationData(
             figure=figure,
             metrics=metrics,
-            total_drones=len(drones),
+            total_drones=result.total_drones,
         )

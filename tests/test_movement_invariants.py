@@ -112,3 +112,38 @@ connection: restricted-goal [max_link_capacity=1]
     assert (1, MovementKind.END_TRANSIT) in turns[1]
     assert (2, MovementKind.START_TRANSIT) in turns[1]
     assert (2, MovementKind.END_TRANSIT) in turns[2]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        (
+            "nb_drones: 12\n"
+            "start_hub: entry 0 0\n"
+            "hub: tunnel 1 0 [zone=restricted max_drones=1]\n"
+            "end_hub: goal 2 0\n"
+            "connection: entry-tunnel [max_link_capacity=1]\n"
+            "connection: tunnel-goal\n"
+        ),
+        (
+            "nb_drones: 8\n"
+            "start_hub: entry 0 0\n"
+            "hub: fast 1 0 [zone=priority max_drones=2]\n"
+            "hub: slow 1 1 [max_drones=2]\n"
+            "hub: shared 2 0 [max_drones=2]\n"
+            "hub: wall 2 1 [zone=blocked]\n"
+            "end_hub: goal 3 0\n"
+            "connection: entry-fast\n"
+            "connection: entry-slow\n"
+            "connection: fast-shared [max_link_capacity=2]\n"
+            "connection: slow-shared [max_link_capacity=2]\n"
+            "connection: shared-goal [max_link_capacity=2]\n"
+            "connection: slow-wall\n"
+            "connection: wall-goal\n"
+        ),
+    ],
+    ids=["restricted-queue", "priority-detour"],
+)
+def test_unseen_maps_respect_every_turn_capacity(text: str) -> None:
+    """Check zone occupancy, link capacity, and mandatory arrival timing."""
+    assert simulate(text, max_turns=100)

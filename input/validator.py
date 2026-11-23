@@ -49,6 +49,16 @@ class Hub(BaseModel):
     COLOR: str | None = Field(alias="color", default="grey")
     MAX_DRONES: int = Field(alias="max_drones", ge=1, default=1)
 
+    @model_validator(mode="before")
+    @classmethod
+    def ignore_terminal_capacity(
+        cls, values: dict[str, object]
+    ) -> dict[str, object]:
+        """Entry and exit have unlimited capacity by the subject rules."""
+        if values.get("type") in (HubType.ENTRY, HubType.EXIT):
+            return {**values, "max_drones": 1}
+        return values
+
     @field_validator("NAME")
     @classmethod
     def valid_names(cls, name: str) -> str:
@@ -87,7 +97,7 @@ class Map_(BaseModel):
     """Complete validated map using existing uppercase property names."""
 
     NB_DRONES: int = Field(alias="nb_drones", ge=1)
-    HUBS: list[Hub] = Field(alias="Hubs", min_length=3)
+    HUBS: list[Hub] = Field(alias="Hubs", min_length=2)
     START_HUB: str = Field(alias="start_hub")
     END_HUB: str = Field(alias="end_hub")
     CONNECTIONS: list[Connection] = Field(alias="Connections")
