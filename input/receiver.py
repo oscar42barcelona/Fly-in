@@ -123,12 +123,13 @@ class receiver:
 
             key_capacity, value_capacity = link_capacity.split('=', 1)
             
-            if not key_capacity.startswith("max_link_capacity"):
-                    raise ValueError(
-                    f"Line {number}: wrong spelling :(."
-                    f" Content: {line}")
+            if key_capacity.strip() != "max_link_capacity":
+                raise ValueError(
+                    f"Line {number}: Invalid connection capacity key. "
+                    f"Content: {line}"
+                )
 
-            connections_dict[key_capacity.strip()] = link_capacity.strip()
+            connections_dict["link_capacity"] = value_capacity.strip()
 
         connections = connections.strip()
 
@@ -150,17 +151,19 @@ class receiver:
         connections: list[dict[str, int | str]] = []
         mapa: dict[str, object] = {}
 
+        first_data_line = True
         for number, line in enumerate(lines, start=1):
-
-            if number == 1 and not line.startswith("nb_drones:"):
-                raise ValueError(
-                    f"Line {number}: Nb_drones must be at the very "
-                    f"first_line. Content: {line}")
-
             line = line.split("#", 1)[0].strip()
-
             if not line:
                 continue
+
+            if first_data_line:
+                if not line.startswith("nb_drones:"):
+                    raise ValueError(
+                        f"Line {number}: nb_drones must be the first "
+                        f"declaration. Content: {line}"
+                    )
+                first_data_line = False
 
             if line.startswith("nb_drones:"):
                 mapa.update(self.FormatMap(line))
