@@ -19,7 +19,14 @@ ROOT = Path(__file__).resolve().parents[1]
     ("relative_path", "drone_count"),
     [
         ("maps/easy/01_linear_path.txt", 2),
+        ("maps/easy/02_simple_fork.txt", 4),
+        ("maps/easy/03_basic_capacity.txt", 4),
+        ("maps/medium/01_dead_end_trap.txt", 5),
+        ("maps/medium/02_circular_loop.txt", 6),
         ("maps/medium/03_priority_puzzle.txt", 5),
+        ("maps/hard/01_maze_nightmare.txt", 8),
+        ("maps/hard/02_capacity_hell.txt", 12),
+        ("maps/hard/03_ultimate_challenge.txt", 15),
     ],
 )
 def test_service_returns_every_turn(
@@ -117,10 +124,24 @@ def test_turn_view_hides_plotly_controls() -> None:
     assert len(figure.layout.sliders) == 1
 
 
-def test_map_selector_contains_only_project_examples() -> None:
-    """Keep the temporary rainbow test map out of the published app."""
-    assert list(FlyInApp.MAPS) == ["Linear map", "Priority map"]
-    assert all((ROOT / path).is_file() for path in FlyInApp.MAPS.values())
+def test_map_selector_lists_all_bundled_maps_by_difficulty() -> None:
+    """Show every map in sorted category order, without demo entries."""
+    available = FlyInApp.available_maps()
+    assert list(available) == [
+        "Easy / 01 Linear Path",
+        "Easy / 02 Simple Fork",
+        "Easy / 03 Basic Capacity",
+        "Medium / 01 Dead End Trap",
+        "Medium / 02 Circular Loop",
+        "Medium / 03 Priority Puzzle",
+        "Hard / 01 Maze Nightmare",
+        "Hard / 02 Capacity Hell",
+        "Hard / 03 Ultimate Challenge",
+        "Challenger / 01 The Impossible Dream",
+    ]
+    assert len(set(available.values())) == 10
+    assert all((ROOT / path).is_file() for path in available.values())
+    assert all("demo" not in path for path in available.values())
 
 
 def test_app_shows_english_controls_and_metrics() -> None:
@@ -132,6 +153,9 @@ def test_app_shows_english_controls_and_metrics() -> None:
     ).run()
     assert not app.exception
     assert app.selectbox[0].label == "Select a map"
+    assert list(app.selectbox[0].options) == list(
+        FlyInApp.available_maps()
+    )
     assert [button.label for button in app.button] == [
         "Previous", "Next", "Play", "Pause"
     ]
@@ -146,7 +170,7 @@ def test_app_shows_english_controls_and_metrics() -> None:
     assert not app.exception
     assert app.metric[2].value == "1"
 
-    app.selectbox[0].set_value("Priority map").run()
+    app.selectbox[0].set_value("Medium / 03 Priority Puzzle").run()
     assert not app.exception
     assert app.metric[0].value == "0 / 5"
 
