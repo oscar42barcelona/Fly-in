@@ -47,6 +47,8 @@ mathematical proof of every possible design property.
   duplicate links and missing declarations. Invalid input must emit a
   line and cause without a Python traceback.
 - Unsolvable but syntactically valid maps: report no route clearly.
+- Deterministic loop protection: stop on a repeated global drone state
+  with a clear error rather than running forever.
 - Ctrl+C: print a concise interruption message, exit with code 130 and
   do not dump a traceback.
 - Static checks: repository-wide Flake8 and Mypy with mandatory flags.
