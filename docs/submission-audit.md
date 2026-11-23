@@ -18,6 +18,11 @@ Fly-in uses object-oriented classes for its behavior:
 | Visualization | `plotlyzer`, `TurnPositionReplayer` | Replay positions without mutating graph state |
 | Streamlit | `SimulationService`, `FlyInApp`, `PlaybackController` | Prepare display data and control playback |
 
+Both the CLI and the Streamlit visualization use
+`SimulationRunner.simulate()` and its typed `SimulationResult`, so they
+share one graph-building and turn-scheduling pipeline rather than
+duplicating engine setup.
+
 The `main()` functions in `cli.py` and
 `input/formatter_algorithm_integrado.py` are compatibility wrappers
 rather than implementations of the business logic. The older lowercase
