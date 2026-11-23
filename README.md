@@ -83,8 +83,12 @@ make clean
 python3 -m pytest -q
 ```
 
-`make lint` runs `flake8 .` and `mypy .` with the flags required by the
-subject. The GitHub Actions workflow also verifies the nine mandatory
+\`make lint\` runs Flake8 and Mypy using the same Python interpreter as
+the application. If \`.venv/bin/python\` exists, Make automatically uses
+that environment even when it has not been activated. The Flake8 configuration
+excludes virtual environments so installed libraries are not checked.
+If either tool reports missing dependencies, run \`make install\` and retry.
+Mypy retains the flags required by the subject. The GitHub Actions workflow also verifies the nine mandatory
 benchmark maps and capacity invariants.
 
 ## Example input and expected output
