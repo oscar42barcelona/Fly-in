@@ -86,8 +86,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Create project-local virtual environment
+        run: python -m venv .venv
       - name: Install from the repository's dependency manifest
         run: make install
+      - name: Validate Makefile lint inside the local virtual environment
+        run: make lint
       - name: Execute the required Makefile run target
         run: |
           make run MAP=maps/easy/01_linear_path.txt > /tmp/flyin_run.txt
