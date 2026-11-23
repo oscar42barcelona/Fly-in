@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from DroneGen.base import MovementRecord
 from DroneGen.Flygorithm.Algorithm import Algorithm
 from DroneGen.Graph.Map import Graph
@@ -9,6 +11,15 @@ from DroneGen.Graph.MapFactory import Factory
 from DroneGen.Orchestrator import orchestrator
 from input.receiver import receiver
 from input.validator import HubType
+
+
+@dataclass(frozen=True)
+class SimulationResult:
+    """Provide the common simulation outcome to CLI and visual interfaces."""
+
+    graph: Graph
+    movements: dict[int, list[MovementRecord]]
+    total_drones: int
 
 
 class SimulationRunner:
@@ -21,7 +32,7 @@ class SimulationRunner:
         self.map_path = map_path
         self.visualize = visualize
 
-    def _simulate(self) -> tuple[Graph, dict[int, list[MovementRecord]]]:
+    def simulate(self) -> SimulationResult:
         """Build a validated graph and calculate all scheduled movements."""
         model = receiver(self.map_path).load()
         factory = Factory()
@@ -46,12 +57,12 @@ class SimulationRunner:
 
         routes = Algorithm().solve(drones[0], graph, model.NB_DRONES)
         movements = orchestrator().plan(drones, routes, graph)
-        return graph, movements
+        return SimulationResult(graph, movements, len(drones))
 
     def run(self) -> None:
         """Print movements and optionally export the Plotly visualization."""
-        graph, movements = self._simulate()
-        for records in movements.values():
+        result = self.simulate()
+        for records in result.movements.values():
             print(" ".join(
                 f"D{record.drone_id}-{record.location}"
                 for record in records
@@ -60,7 +71,9 @@ class SimulationRunner:
         if self.visualize:
             from ui.visualizer.plotly_test import plotlyzer
 
-            figure = plotlyzer(graph).create_visualization(movements)
+            figure = plotlyzer(result.graph).create_visualization(
+                result.movements
+            )
             figure.write_html("flyin_preview.html", auto_open=False)
 
 
