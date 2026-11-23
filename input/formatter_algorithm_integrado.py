@@ -5,7 +5,6 @@ from input.validator import HubType, Map_
 from DroneGen.Graph.MapFactory import Factory
 from DroneGen.Flygorithm.Algorithm import Algorithm
 from DroneGen.Orchestrator import orchestrator
-from ui.visualizer.render_tester import launch
 
 
 def main(map_path: str | None = None, visualize: bool = False) -> None:
@@ -46,7 +45,11 @@ def main(map_path: str | None = None, visualize: bool = False) -> None:
         print(moves)
 
     if visualize:
-        launch(graph, movements, start_name=start.name)
+        # Lazy import: the normal CLI output does not require Plotly.
+        from ui.visualizer.plotly_test import plotlyzer
+
+        figure = plotlyzer(graph).create_visualization(movements)
+        figure.write_html("flyin_preview.html", auto_open=True)
 
 
 if __name__ == "__main__":
