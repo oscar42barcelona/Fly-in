@@ -34,6 +34,7 @@ jobs:
           python -m pytest -q -s \
             tests/test_parser_adversarial.py \
             tests/test_cli_interruptions.py \
+            tests/test_architecture.py \
             tests/test_unseen_maps.py \
             tests/test_movement_invariants.py
 
