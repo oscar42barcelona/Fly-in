@@ -117,6 +117,12 @@ jobs:
           make run MAP=maps/easy/01_linear_path.txt > /tmp/flyin_run.txt
           test "$(wc -l < /tmp/flyin_run.txt)" -eq 4
           grep -q '^D2-goal$' /tmp/flyin_run.txt
+      - name: Check cleanup removes generated HTML but retains venv
+        run: |
+          touch flyin_preview.html
+          make clean
+          test ! -e flyin_preview.html
+          test -x .venv/bin/python
       - name: Confirm the mandatory English README header
         run: |
           python - <<'PY'
