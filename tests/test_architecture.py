@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE_CLASSES = (
     ("cli.py", "FlyInCLI"),
     ("input/formatter_algorithm_integrado.py", "SimulationRunner"),
+    ("input/formatter_algorithm_integrado.py", "SimulationResult"),
     ("input/receiver.py", "receiver"),
     ("input/validator.py", "Map_"),
     ("DroneGen/Graph/Drone.py", "Drone"),
@@ -101,3 +102,19 @@ def test_cli_and_simulation_have_no_unguarded_module_side_effects() -> None:
             and isinstance(node.value, ast.Call)
         ]
         assert not operations, relative
+
+
+
+def test_shared_runner_returns_typed_engine_result() -> None:
+    """Both CLI and visualization can consume the same calculated turns."""
+    from input.formatter_algorithm_integrado import (
+        SimulationResult,
+        SimulationRunner,
+    )
+
+    result = SimulationRunner(
+        str(ROOT / "maps/easy/01_linear_path.txt")
+    ).simulate()
+    assert isinstance(result, SimulationResult)
+    assert result.total_drones == 2
+    assert len(result.movements) == 4
