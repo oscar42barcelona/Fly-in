@@ -52,7 +52,7 @@ class RoutingDiagnostic:
                 self.drones, routes, self.graph
             )
             try:
-                approved = planner.resolve_movements(intents, self.graph)
+                approved = planner.resolve_movements(intents, self.graph, routes)
             except (ValueError, RuntimeError) as error:
                 print(f"TURN {turn} PLANNING ERROR: {error}", flush=True)
                 return
