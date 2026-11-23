@@ -9,7 +9,7 @@ from __future__ import annotations
 from plotly.graph_objects import Figure, Frame, Scatter
 
 from DroneGen.Graph.Map import Connection, Node
-from .turn_positions import replay_turns
+from .turn_positions import TurnPositionReplayer
 
 from .base import Visualizer
 from DroneGen.base import MovementRecord
@@ -29,7 +29,7 @@ class plotlyzer(Visualizer):
         self, turn_movements: dict[int, list[MovementRecord]]
     ) -> Figure:
         """Build an interactive Figure with one snapshot per simulation turn."""
-        positions = replay_turns(self.graph, turn_movements)
+        positions = TurnPositionReplayer(self.graph).replay(turn_movements)
         final_turn = max(positions)
         figure = self.create_figure()
 
