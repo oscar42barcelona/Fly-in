@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from DroneGen.Flygorithm.Algorithm import Algorithm
-from DroneGen.Graph.Map import Connection, Node
+from DroneGen.Graph.Map import Node
 from DroneGen.Graph.MapFactory import Factory
 from DroneGen.Orchestrator import orchestrator
 from input.receiver import receiver
