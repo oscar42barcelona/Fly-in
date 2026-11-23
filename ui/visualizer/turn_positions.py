@@ -77,15 +77,15 @@ class TurnPositionReplayer:
                     arriving.add(drone_id)
 
                 if record.state == State.TRANSIT:
-                    connection = connections.get(record.location)
-                    if connection is None or not isinstance(previous, Node):
+                    transit_connection = connections.get(record.location)
+                    if transit_connection is None or not isinstance(previous, Node):
                         raise ValueError(
                             f"D{drone_id}: invalid restricted transit"
                         )
-                    if previous is connection.node_a:
-                        destination = connection.node_b
-                    elif previous is connection.node_b:
-                        destination = connection.node_a
+                    if previous is transit_connection.node_a:
+                        destination = transit_connection.node_b
+                    elif previous is transit_connection.node_b:
+                        destination = transit_connection.node_a
                     else:
                         raise ValueError(
                             f"D{drone_id}: transit from wrong node"
@@ -94,33 +94,33 @@ class TurnPositionReplayer:
                         raise ValueError(
                             f"D{drone_id}: transit target is not restricted"
                         )
-                    current[drone_id] = connection
+                    current[drone_id] = transit_connection
                     new_pending[drone_id] = destination
 
                 elif record.state == State.MOVEMENT:
-                    destination = nodes.get(record.location)
-                    if destination is None:
+                    target_node = nodes.get(record.location)
+                    if target_node is None:
                         raise ValueError(
                             f"D{drone_id}: unknown destination"
                         )
                     if isinstance(previous, Connection):
-                        if destination not in (
+                        if target_node not in (
                             previous.node_a, previous.node_b
                         ):
                             raise ValueError(
                                 f"D{drone_id}: arrival is not on link"
                             )
-                    elif previous is not destination and not any(
+                    elif previous is not target_node and not any(
                         (edge.node_a is previous
-                         and edge.node_b is destination)
+                         and edge.node_b is target_node)
                         or (edge.node_b is previous
-                            and edge.node_a is destination)
+                            and edge.node_a is target_node)
                         for edge in self.graph.connections
                     ):
                         raise ValueError(
                             f"D{drone_id}: nonadjacent movement"
                         )
-                    current[drone_id] = destination
+                    current[drone_id] = target_node
 
                 elif record.state == State.STAY:
                     if (
