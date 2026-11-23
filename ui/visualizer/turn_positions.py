@@ -78,7 +78,10 @@ class TurnPositionReplayer:
 
                 if record.state == State.TRANSIT:
                     transit_connection = connections.get(record.location)
-                    if transit_connection is None or not isinstance(previous, Node):
+                    if (
+                        transit_connection is None
+                        or not isinstance(previous, Node)
+                    ):
                         raise ValueError(
                             f"D{drone_id}: invalid restricted transit"
                         )
