@@ -34,7 +34,9 @@ class orchestrator(flychestrator):
                     intents = planner.collect_intents(
                         drones, routes, graph
                     )
-                    approved = planner.resolve_movements(intents, graph, routes)
+                    approved = planner.resolve_movements(
+                        intents, graph, routes
+                    )
                 if not approved:
                     raise ValueError(
                         "Simulation cannot advance: no movements approved"
