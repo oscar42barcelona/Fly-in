@@ -49,7 +49,7 @@ def main(map_path: str | None = None, visualize: bool = False) -> None:
         from ui.visualizer.plotly_test import plotlyzer
 
         figure = plotlyzer(graph).create_visualization(movements)
-        figure.write_html("flyin_preview.html", auto_open=True)
+        figure.write_html("flyin_preview.html", auto_open=False)
 
 
 if __name__ == "__main__":

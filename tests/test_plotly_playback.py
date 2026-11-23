@@ -142,6 +142,6 @@ def test_cli_visualize_calls_plotly_figure(monkeypatch) -> None:
 
     assert output == {
         "filename": "flyin_preview.html",
-        "auto_open": True,
+        "auto_open": False,
         "frames": 5,
     }
