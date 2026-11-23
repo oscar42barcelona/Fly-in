@@ -75,7 +75,7 @@ def test_app_has_controls_and_metrics() -> None:
     from streamlit.testing.v1 import AppTest
 
     app = AppTest.from_file(
-        str(ROOT / "tes_streamlit_turnos.py"), default_timeout=20
+        str(ROOT / "ui/interface/app.py"), default_timeout=20
     ).run()
     assert not app.exception
     assert len(app.metric) == 3
