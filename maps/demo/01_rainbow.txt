@@ -1,7 +1,0 @@
-# Demonstration of the valid single-word color=rainbow value.
-nb_drones: 1
-start_hub: start 0 0 [color=green]
-hub: spectrum 1 0 [color=rainbow]
-end_hub: goal 2 0 [color=red]
-connection: start-spectrum
-connection: spectrum-goal
