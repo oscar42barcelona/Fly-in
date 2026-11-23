@@ -47,10 +47,23 @@ class FlyInApp:
     """Coordinate map selection, Streamlit controls, and Plotly snapshots."""
 
     ROOT: ClassVar[Path] = Path(__file__).resolve().parents[2]
-    MAPS: ClassVar[dict[str, str]] = {
-        "Linear map": "maps/easy/01_linear_path.txt",
-        "Priority map": "maps/medium/03_priority_puzzle.txt",
-    }
+    MAP_CATEGORIES: ClassVar[tuple[str, ...]] = (
+        "easy", "medium", "hard", "challenger"
+    )
+
+    @classmethod
+    def available_maps(cls) -> dict[str, str]:
+        """Discover the bundled maps, grouped by difficulty and filename."""
+        maps: dict[str, str] = {}
+        for category in cls.MAP_CATEGORIES:
+            directory = cls.ROOT / "maps" / category
+            for path in sorted(directory.glob("*.txt")):
+                label = (
+                    f"{category.title()} / "
+                    f"{path.stem.replace('_', ' ').title()}"
+                )
+                maps[label] = path.relative_to(cls.ROOT).as_posix()
+        return maps
 
     def __init__(self) -> None:
         """Initialize the app without running the simulation."""
@@ -67,8 +80,19 @@ class FlyInApp:
     def run(self) -> None:
         """Load a map and display the active playback fragment."""
         st.title("Fly-in | Drone simulation")
-        map_name = st.selectbox("Select a map", list(self.MAPS))
-        path = self.ROOT / self.MAPS[map_name]
+        maps = self.available_maps()
+        if not maps:
+            st.error("No map files were found in the maps directory.")
+            st.stop()
+            return
+
+        map_name = st.selectbox("Select a map", list(maps))
+        if map_name.startswith("Challenger / "):
+            st.caption(
+                "Challenger is an optional stress-test map; "
+                "completion is not guaranteed."
+            )
+        path = self.ROOT / maps[map_name]
 
         try:
             map_version = path.stat().st_mtime_ns
