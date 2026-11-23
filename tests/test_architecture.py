@@ -104,7 +104,6 @@ def test_cli_and_simulation_have_no_unguarded_module_side_effects() -> None:
         assert not operations, relative
 
 
-
 def test_shared_runner_returns_typed_engine_result() -> None:
     """Both CLI and visualization can consume the same calculated turns."""
     from input.formatter_algorithm_integrado import (
