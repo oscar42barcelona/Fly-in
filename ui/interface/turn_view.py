@@ -1,4 +1,4 @@
-"""Present one Plotly turn under Streamlit's playback controls."""
+"""Render a single simulation turn as a static Plotly figure."""
 
 from __future__ import annotations
 
@@ -7,26 +7,28 @@ from copy import deepcopy
 from plotly.graph_objects import Figure
 
 
-def figure_at_turn(figure: Figure, turn: int) -> Figure:
-    """Return an independent static snapshot, without inert Plotly controls.
+class TurnFigureView:
+    """Select a frame without altering the cached animated Figure."""
 
-    Keep the original animated figure intact so cached frames remain reusable
-    while Streamlit advances or rewinds the turn.
-    """
-    if not 0 <= turn < len(figure.frames):
-        raise IndexError(f"Unknown simulation turn: {turn}")
+    def __init__(self, figure: Figure) -> None:
+        """Store the original animation as read-only source data."""
+        self.figure = figure
 
-    selected = deepcopy(figure)
-    frame = selected.frames[turn]
-    selected.data[-1].update(frame.data[0].to_plotly_json())
+    def at_turn(self, turn: int) -> Figure:
+        """Return a snapshot without the inactive Plotly playback controls."""
+        if not 0 <= turn < len(self.figure.frames):
+            raise IndexError(f"Unknown simulation turn: {turn}")
 
-    # update_layout(sliders=[], updatemenus=[]) MERGES with existing arrays;
-    # direct assignment actually removes the controls from the Plotly figure.
-    selected.frames = ()
-    selected.layout.sliders = ()
-    selected.layout.updatemenus = ()
-    selected.update_layout(
-        title=f"Fly-in | Turno {turn}",
-        margin=dict(l=35, r=35, b=35, t=55),
-    )
-    return selected
+        selected = deepcopy(self.figure)
+        frame = selected.frames[turn]
+        selected.data[-1].update(frame.data[0].to_plotly_json())
+
+        # Direct assignment removes the controls; update_layout merges arrays.
+        selected.frames = ()
+        selected.layout.sliders = ()
+        selected.layout.updatemenus = ()
+        selected.update_layout(
+            title=f"Fly-in | Turn {turn}",
+            margin=dict(l=35, r=35, b=35, t=55),
+        )
+        return selected
