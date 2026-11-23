@@ -86,7 +86,8 @@ def simulate(text: str, max_turns: int = 100) -> list[list[tuple[int, MovementKi
 def test_bundled_maps_respect_capacity(filename: str) -> None:
     """Bundled maps should complete without invalid simultaneous moves."""
     text = (ROOT / filename).read_text(encoding="utf-8")
-    simulate(text)
+    turns = simulate(text)
+    print(f"BENCHMARK {filename}: {len(turns)} turns")
 
 
 def test_restricted_zone_requires_two_turns() -> None:
