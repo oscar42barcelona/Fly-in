@@ -17,6 +17,7 @@ class orchestrator(flychestrator):
         graph: Graph,
     ) -> dict[int, list[MovementRecord]]:
         planner = TurnPlanner()
+        self.assign_initial_routes(drones, routes)
         movements_by_turn: dict[int, list[MovementRecord]] = {}
         turn = 0
 
@@ -40,6 +41,40 @@ class orchestrator(flychestrator):
             ]
 
         return movements_by_turn
+
+    @staticmethod
+    def assign_initial_routes(
+        drones: list[Drone],
+        routes: dict[int, tuple[int, tuple[Node, ...]]],
+    ) -> None:
+        """Spread initial traffic across alternative paths.
+
+        Each new assignment increases that route's estimated completion
+        time by one turn. Prefer lower-cost routes when scores tie.
+        """
+        if not routes:
+            raise ValueError("No routes available for the simulation")
+
+        allocated = {route_id: 0 for route_id in routes}
+        for drone in drones:
+            possible = [
+                route_id
+                for route_id, (_, path) in routes.items()
+                if path and path[0] is drone.current_node
+            ]
+            if not possible:
+                raise ValueError("No route starts at the drone's position")
+
+            selected = min(
+                possible,
+                key=lambda route_id: (
+                    routes[route_id][0] + allocated[route_id],
+                    routes[route_id][0],
+                    route_id,
+                ),
+            )
+            drone.current_route = selected
+            allocated[selected] += 1
 
     @staticmethod
     def movement_record(intent: MovementIntent) -> MovementRecord:
