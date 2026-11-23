@@ -25,11 +25,6 @@ valid custom colors are preserved. The special single-word value
 not accept `rainbow` as a single CSS color). Other unrecognized color names
 fall back to the zone category color without affecting map parsing.
 
-To inspect it directly, select **Rainbow demo** in Streamlit or run:
-
-```bash
-python3 cli.py maps/demo/01_rainbow.txt --visualize
-```
 
 
 ## Instructions
