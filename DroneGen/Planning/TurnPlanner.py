@@ -6,7 +6,7 @@ from DroneGen.Graph.Map import Connection, Graph, Node
 from DroneGen.Planning.base import (
     MovementIntent, MovementKind, BaseTurnPlanner,
 )
-from input.validator import Zone
+from input.validator import HubType, Zone
 
 
 class TurnPlanner(BaseTurnPlanner):
@@ -197,17 +197,41 @@ class TurnPlanner(BaseTurnPlanner):
         return overloaded_nodes, negative_nodes, bad_connections
 
     def find_reservation_conflicts(
-        self, intents: list[MovementIntent], graph: Graph
+        self,
+        intents: list[MovementIntent],
+        graph: Graph,
+        routes: dict[int, tuple[int, tuple[Node, ...]]] | None = None,
     ) -> list[Node]:
-        """Reserva plazas para los START_TRANSIT del siguiente turno.
+        """Reserve space for restricted arrivals one turn into the future.
 
-        Criterio conservador: ninguna salida futura libera una reserva.
+        A newly arriving drone at a restricted node may be counted as
+        vacating it on the next turn only when its next move is directly
+        to the unlimited exit. Respect the outgoing link's capacity.
+        Other future departures remain unproven and are not discounted.
         """
         occupancy = {node: len(node.drones) for node in graph.nodes}
-        # primer bucle movimientos de ette turno
+        guaranteed: dict[Node, int] = {}
+
         for intent in intents:
             if intent.kind == MovementKind.END_TRANSIT:
                 occupancy[intent.destination] += 1
+
+                if routes is not None:
+                    path = routes[intent.drone.current_route][1]
+                    index = path.index(intent.destination)
+                    if (
+                        index + 1 < len(path)
+                        and path[index + 1].type == HubType.EXIT
+                    ):
+                        outgoing = self.find_connection(
+                            intent.destination, path[index + 1], graph
+                        )
+                        if outgoing is not None:
+                            node = intent.destination
+                            guaranteed[node] = min(
+                                outgoing.capacity,
+                                guaranteed.get(node, 0) + 1,
+                            )
             else:
                 origin = intent.origin
                 if origin is None:
@@ -215,29 +239,37 @@ class TurnPlanner(BaseTurnPlanner):
                 occupancy[origin] -= 1
                 if intent.kind == MovementKind.NORMAL:
                     occupancy[intent.destination] += 1
-        # reserva para los restricted
+
         for intent in intents:
             if intent.kind == MovementKind.START_TRANSIT:
                 occupancy[intent.destination] += 1
-        # devuelvo solo los nodos en los que se prevee probblma de ocupacion
+
         return [
             node for node in graph.nodes
-            if node.type not in ("entry", "exit")
-            and occupancy[node] > node.capacity
+            if node.type not in (HubType.ENTRY, HubType.EXIT)
+            and occupancy[node] - guaranteed.get(node, 0) > node.capacity
         ]
 
     def fits_capacities(
-        self, intents: list[MovementIntent], graph: Graph
+        self,
+        intents: list[MovementIntent],
+        graph: Graph,
+        routes: dict[int, tuple[int, tuple[Node, ...]]] | None = None,
     ) -> bool:
         """Comprueba capacidades actuales y reservas de llegadas futuras."""
         overloaded, negative, bad_links = self.find_capacity_conflicts(
             intents, graph
         )
-        reservations = self.find_reservation_conflicts(intents, graph)
+        reservations = self.find_reservation_conflicts(
+            intents, graph, routes
+        )
         return not (overloaded or negative or bad_links or reservations)
 
     def resolve_movements(
-        self, intents: list[MovementIntent], graph: Graph
+        self,
+        intents: list[MovementIntent],
+        graph: Graph,
+        routes: dict[int, tuple[int, tuple[Node, ...]]] | None = None,
     ) -> list[MovementIntent]:
         """Retira movimientos opcionales hasta encontrar un turno valido.
 
@@ -257,7 +289,9 @@ class TurnPlanner(BaseTurnPlanner):
                     f"Negative occupancy detected in nodes: "
                     f"{[node.name for node in negative]}")
 
-            reservations = self.find_reservation_conflicts(approved, graph)
+            reservations = self.find_reservation_conflicts(
+                approved, graph, routes
+            )
             if not (overloaded or negative or bad_links or reservations):
                 return approved
 
