@@ -32,11 +32,13 @@ def _value(item: Any) -> str:
 
 
 def _is_start(node: Any) -> bool:
-    return 'start' in _value(getattr(node, 'type', ''))
+    """Recognize both the domain entry type and the viewer's demo type."""
+    return _value(getattr(node, 'type', '')) in ('entry', 'start')
 
 
 def _is_end(node: Any) -> bool:
-    return 'end' in _value(getattr(node, 'type', ''))
+    """Recognize both the domain exit type and the viewer's demo type."""
+    return _value(getattr(node, 'type', '')) in ('exit', 'end')
 
 
 def _zone(node: Any) -> str:
