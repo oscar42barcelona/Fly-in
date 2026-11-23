@@ -15,7 +15,7 @@ def main() -> int:
     parser.add_argument(
         "--visualize",
         action="store_true",
-        help="Open the optional Pygame simulation viewer",
+        help="Open the Plotly turn playback in your browser",
     )
     args = parser.parse_args()
 
