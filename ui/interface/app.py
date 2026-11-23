@@ -7,7 +7,7 @@ import streamlit as st
 from ui.visualizer.simulation_service import build_simulation
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 
 MAPAS = {
     "Mapa lineal": "maps/easy/01_linear_path.txt",

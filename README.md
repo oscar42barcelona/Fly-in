@@ -73,7 +73,7 @@ from the repository root:
 
 ```bash
 python3 -m pip install -r dependencies.txt
-python3 -m streamlit run tes_streamlit_turnos.py
+python3 -m streamlit run ui/interface/app.py
 ```
 
 Choose a map and use **Anterior** / **Siguiente** to inspect each completed
