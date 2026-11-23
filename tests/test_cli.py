@@ -29,7 +29,7 @@ def test_linear_map_completes_in_four_turns() -> None:
     assert lines[-1] == "D2-goal"
     assert sum(line.count("-goal") for line in lines) == 2
     assert all(
-        re.fullmatch(r"D[0-9]+-[^\\s]+(?: D[0-9]+-[^\\s]+)*", line)
+        re.fullmatch(r"D[0-9]+-\S+(?: D[0-9]+-\S+)*", line)
         for line in lines
     )
 
