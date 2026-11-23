@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from ui.interface.turn_view import figure_at_turn
 from ui.visualizer.simulation_service import (
     TurnMetrics,
     build_simulation,
@@ -90,3 +91,50 @@ def test_app_has_controls_and_metrics() -> None:
     app.selectbox[0].set_value("Mapa de prioridades").run()
     assert not app.exception
     assert app.metric[0].value == "0 / 5"
+
+
+def test_streamlit_frame_hides_plotly_animation_controls() -> None:
+    """Plotly's stale controls should not remain visible in a static frame."""
+    figure, _, _ = build_simulation(
+        str(ROOT / "maps/easy/01_linear_path.txt")
+    )
+    frame_count = len(figure.frames)
+    selected = figure_at_turn(figure, 1)
+
+    assert selected is not figure
+    assert not selected.frames
+    assert not selected.layout.sliders
+    assert not selected.layout.updatemenus
+    assert selected.layout.title.text == "Fly-in | Turno 1"
+    assert list(selected.data[-1].x) == list(figure.frames[1].data[0].x)
+    # The cached animated Figure is still reusable for further turns.
+    assert len(figure.frames) == frame_count
+    assert len(figure.layout.sliders) == 1
+    assert len(figure.layout.updatemenus) == 1
+
+
+def test_streamlit_play_and_pause_are_stateful() -> None:
+    """Play advances the selected turn; Pause stops automatic playback."""
+    from streamlit.testing.v1 import AppTest
+
+    app = AppTest.from_file(
+        str(ROOT / "ui/interface/app.py"), default_timeout=20
+    ).run()
+    assert not app.exception
+    assert [button.label for button in app.button] == [
+        "Anterior", "Siguiente", "Play", "Pause"
+    ]
+
+    app.button[2].click().run()
+    assert not app.exception
+    assert app.session_state["playing"] is True
+    assert app.session_state["turno"] == 1
+
+    app.button[3].click().run()
+    assert not app.exception
+    assert app.session_state["playing"] is False
+    assert app.session_state["turno"] == 1
+
+    app.button[1].click().run()
+    assert not app.exception
+    assert app.session_state["turno"] == 2

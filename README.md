@@ -77,7 +77,9 @@ python3 -m streamlit run ui/interface/app.py
 ```
 
 Choose a map and use **Anterior** / **Siguiente** to inspect each completed
-simulation turn. The summary shows drones delivered to the exit, drones
+simulation turn. **Play** automatically advances the Streamlit turn and all
+three metrics; **Pause** stops playback. The Plotly figure itself has no
+separate animation controls to avoid an unsynchronized second timeline. The summary shows drones delivered to the exit, drones
 occupying a connection in restricted transit, and drones waiting in a node
 without moving during that turn. Turn zero reports no waiting drones.
 
