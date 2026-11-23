@@ -50,7 +50,6 @@ class FlyInApp:
     MAPS: ClassVar[dict[str, str]] = {
         "Linear map": "maps/easy/01_linear_path.txt",
         "Priority map": "maps/medium/03_priority_puzzle.txt",
-        "Rainbow demo": "maps/demo/01_rainbow.txt",
     }
 
     def __init__(self) -> None:
