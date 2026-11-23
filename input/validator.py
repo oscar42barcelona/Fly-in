@@ -30,8 +30,8 @@ class Zone(str, Enum):
 
 class Hub(BaseModel):
     NAME: str = Field(alias="name")
-    X: int = Field(alias="x", ge=0)
-    Y: int = Field(alias="y", ge=0)
+    X: int = Field(alias="x")
+    Y: int = Field(alias="y")
     TYPE: HubType = Field(alias="type", default="intermediate")
     ZONE: Zone = Field(alias="zone", default=Zone.NORMAL)
     COLOR: str | None = Field(alias="color", default="grey")
