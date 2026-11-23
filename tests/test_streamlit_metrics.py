@@ -1,13 +1,15 @@
-"""Service and UI regression tests for Streamlit turn metrics."""
+"""Service, playback, and Streamlit regression tests."""
 
 from pathlib import Path
 
 import pytest
 
-from ui.interface.turn_view import figure_at_turn
+from ui.interface.app import PlaybackController
+from ui.interface.turn_view import TurnFigureView
 from ui.visualizer.simulation_service import (
+    SimulationData,
+    SimulationService,
     TurnMetrics,
-    build_simulation,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,13 +22,17 @@ ROOT = Path(__file__).resolve().parents[1]
         ("maps/medium/03_priority_puzzle.txt", 5),
     ],
 )
-def test_simulation_service_returns_every_turn(
+def test_service_returns_every_turn(
     relative_path: str, drone_count: int
 ) -> None:
-    figure, metrics, total = build_simulation(str(ROOT / relative_path))
+    """Verify all simulation turns and final delivery counts."""
+    result = SimulationService(str(ROOT / relative_path)).build()
+    metrics = result.metrics
+    total = result.total_drones
 
+    assert isinstance(result, SimulationData)
     assert total == drone_count
-    assert list(metrics) == list(range(len(figure.frames)))
+    assert list(metrics) == list(range(len(result.figure.frames)))
     assert metrics[0] == TurnMetrics(delivered=0, transit=0, waiting=0)
     assert metrics[max(metrics)].delivered == total
     assert metrics[max(metrics)].transit == 0
@@ -38,16 +44,17 @@ def test_simulation_service_returns_every_turn(
 
 
 def test_waiting_drones_are_counted_from_history() -> None:
-    _, metrics, _ = build_simulation(
+    """Only drones not moving in the current turn count as waiting."""
+    result = SimulationService(
         str(ROOT / "maps/easy/01_linear_path.txt")
-    )
-    # Two drones start in the same node, but only one can leave in turn one.
-    assert metrics[1].waiting == 1
-    assert metrics[1].transit == 0
-    assert metrics[1].delivered == 0
+    ).build()
+    assert result.metrics[1].waiting == 1
+    assert result.metrics[1].transit == 0
+    assert result.metrics[1].delivered == 0
 
 
 def test_restricted_link_is_counted_as_transit(tmp_path: Path) -> None:
+    """A drone at a restricted midpoint counts as in transit."""
     path = tmp_path / "restricted.txt"
     path.write_text(
         "\n".join(
@@ -63,23 +70,68 @@ def test_restricted_link_is_counted_as_transit(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    figure, metrics, count = build_simulation(str(path))
-    assert count == 1
-    assert metrics[1] == TurnMetrics(delivered=0, transit=1, waiting=0)
-    assert metrics[2] == TurnMetrics(delivered=0, transit=0, waiting=0)
-    assert metrics[3] == TurnMetrics(delivered=1, transit=0, waiting=0)
-    assert list(figure.frames[1].data[0].x) == [1.0]
+    result = SimulationService(str(path)).build()
+    assert result.total_drones == 1
+    assert result.metrics[1] == TurnMetrics(0, 1, 0)
+    assert result.metrics[2] == TurnMetrics(0, 0, 0)
+    assert result.metrics[3] == TurnMetrics(1, 0, 0)
+    assert list(result.figure.frames[1].data[0].x) == [1.0]
 
 
-def test_app_has_controls_and_metrics() -> None:
-    """Streamlit AppTest renders the actual page without starting a server."""
+def test_playback_controller_boundaries() -> None:
+    """Manual navigation and automatic playback never exceed the limits."""
+    controller = PlaybackController()
+    controller.previous()
+    assert controller.turn == 0
+
+    controller.start(last_turn=2)
+    assert controller.playing
+    controller.tick(last_turn=2)
+    assert controller.turn == 1
+    controller.tick(last_turn=2)
+    assert controller.turn == 2
+    assert not controller.playing
+
+    controller.next(last_turn=2)
+    assert controller.turn == 2
+    controller.previous()
+    assert controller.turn == 1
+
+
+def test_turn_view_hides_plotly_controls() -> None:
+    """The rendered copy has no stale animation controls."""
+    result = SimulationService(
+        str(ROOT / "maps/easy/01_linear_path.txt")
+    ).build()
+    figure = result.figure
+    frame_count = len(figure.frames)
+    selected = TurnFigureView(figure).at_turn(1)
+
+    assert selected is not figure
+    assert not selected.frames
+    assert not selected.layout.sliders
+    assert not selected.layout.updatemenus
+    assert selected.layout.title.text == "Fly-in | Turn 1"
+    assert list(selected.data[-1].x) == list(figure.frames[1].data[0].x)
+    assert len(figure.frames) == frame_count
+    assert len(figure.layout.sliders) == 1
+
+
+def test_app_shows_english_controls_and_metrics() -> None:
+    """The Streamlit interface retains navigation across reruns."""
     from streamlit.testing.v1 import AppTest
 
     app = AppTest.from_file(
         str(ROOT / "ui/interface/app.py"), default_timeout=20
     ).run()
     assert not app.exception
-    assert len(app.metric) == 3
+    assert app.selectbox[0].label == "Select a map"
+    assert [button.label for button in app.button] == [
+        "Previous", "Next", "Play", "Pause"
+    ]
+    assert [item.label for item in app.metric] == [
+        "Delivered", "In transit", "Waiting"
+    ]
     assert app.metric[0].value == "0 / 2"
     assert app.metric[1].value == "0"
     assert app.metric[2].value == "0"
@@ -88,53 +140,32 @@ def test_app_has_controls_and_metrics() -> None:
     assert not app.exception
     assert app.metric[2].value == "1"
 
-    app.selectbox[0].set_value("Mapa de prioridades").run()
+    app.selectbox[0].set_value("Priority map").run()
     assert not app.exception
     assert app.metric[0].value == "0 / 5"
 
 
-def test_streamlit_frame_hides_plotly_animation_controls() -> None:
-    """Plotly's stale controls should not remain visible in a static frame."""
-    figure, _, _ = build_simulation(
-        str(ROOT / "maps/easy/01_linear_path.txt")
-    )
-    frame_count = len(figure.frames)
-    selected = figure_at_turn(figure, 1)
-
-    assert selected is not figure
-    assert not selected.frames
-    assert not selected.layout.sliders
-    assert not selected.layout.updatemenus
-    assert selected.layout.title.text == "Fly-in | Turno 1"
-    assert list(selected.data[-1].x) == list(figure.frames[1].data[0].x)
-    # The cached animated Figure is still reusable for further turns.
-    assert len(figure.frames) == frame_count
-    assert len(figure.layout.sliders) == 1
-    assert len(figure.layout.updatemenus) == 1
-
-
-def test_streamlit_play_and_pause_are_stateful() -> None:
-    """Play advances the selected turn; Pause stops automatic playback."""
+def test_streamlit_play_and_pause_update_controller() -> None:
+    """Auto playback advances and Pause freezes the current turn."""
     from streamlit.testing.v1 import AppTest
 
     app = AppTest.from_file(
         str(ROOT / "ui/interface/app.py"), default_timeout=20
     ).run()
     assert not app.exception
-    assert [button.label for button in app.button] == [
-        "Anterior", "Siguiente", "Play", "Pause"
-    ]
 
     app.button[2].click().run()
     assert not app.exception
-    assert app.session_state["playing"] is True
-    assert app.session_state["turno"] == 1
+    state = app.session_state["playback"]
+    assert state.playing
+    assert state.turn == 1
 
     app.button[3].click().run()
     assert not app.exception
-    assert app.session_state["playing"] is False
-    assert app.session_state["turno"] == 1
+    state = app.session_state["playback"]
+    assert not state.playing
+    assert state.turn == 1
 
     app.button[1].click().run()
     assert not app.exception
-    assert app.session_state["turno"] == 2
+    assert app.session_state["playback"].turn == 2

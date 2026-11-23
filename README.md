@@ -76,12 +76,15 @@ python3 -m pip install -r dependencies.txt
 python3 -m streamlit run ui/interface/app.py
 ```
 
-Choose a map and use **Anterior** / **Siguiente** to inspect each completed
-simulation turn. **Play** automatically advances the Streamlit turn and all
-three metrics; **Pause** stops playback. The Plotly figure itself has no
-separate animation controls to avoid an unsynchronized second timeline. The summary shows drones delivered to the exit, drones
-occupying a connection in restricted transit, and drones waiting in a node
-without moving during that turn. Turn zero reports no waiting drones.
+Choose a map and use **Previous** / **Next** to inspect any completed
+simulation turn. **Play** advances the selected turn and its metrics, and
+**Pause** stops playback. The Streamlit controls are the only playback
+controls in this view, so the graph and metric counts always agree.
+
+The three metrics are **Delivered** (drones at the exit), **In transit**
+(drones occupying a restricted connection), and **Waiting** (drones that
+remain at a non-exit node without moving during that turn). Turn zero
+shows no waiting drones.
 
 The simulation is calculated once per map version and cached for navigation.
 Editing a map invalidates its cached result. Stop the Streamlit server with

@@ -9,7 +9,7 @@ from __future__ import annotations
 from plotly.graph_objects import Figure, Frame, Scatter
 
 from DroneGen.Graph.Map import Connection, Node
-from .turn_positions import replay_turns
+from .turn_positions import TurnPositionReplayer
 
 from .base import Visualizer
 from DroneGen.base import MovementRecord
@@ -28,8 +28,8 @@ class plotlyzer(Visualizer):
     def create_visualization(
         self, turn_movements: dict[int, list[MovementRecord]]
     ) -> Figure:
-        """Build an interactive Figure with one snapshot per simulation turn."""
-        positions = replay_turns(self.graph, turn_movements)
+        """Build an interactive Figure with one snapshot per turn."""
+        positions = TurnPositionReplayer(self.graph).replay(turn_movements)
         final_turn = max(positions)
         figure = self.create_figure()
 
@@ -114,7 +114,7 @@ class plotlyzer(Visualizer):
 
     @staticmethod
     def _drone_trace(positions: dict[int, Node | Connection]) -> Scatter:
-        """Plot drones at nodes or at the midpoint of an occupied connection."""
+        """Plot drones at nodes or midpoints of occupied connections."""
         groups: dict[Node | Connection, list[int]] = {}
         for drone_id, place in sorted(positions.items()):
             groups.setdefault(place, []).append(drone_id)
@@ -180,7 +180,8 @@ class plotlyzer(Visualizer):
                     name=f"{a.name}-{b.name}",
                     line=dict(color="#64748b", width=2),
                     text=[
-                        f"{a.name} - {b.name}<br>Capacity: {connection.capacity}"
+                        f"{a.name} - {b.name}<br>"
+                        f"Capacity: {connection.capacity}"
                     ] * 2,
                     hovertemplate="%{text}<extra></extra>",
                     showlegend=False,
@@ -237,7 +238,10 @@ class plotlyzer(Visualizer):
             xaxis_title="X",
             yaxis_title="Y",
             xaxis=dict(zeroline=False, showgrid=True),
-            yaxis=dict(zeroline=False, showgrid=True, scaleanchor="x", scaleratio=1),
+            yaxis=dict(
+                zeroline=False, showgrid=True,
+                scaleanchor="x", scaleratio=1,
+            ),
             showlegend=False,
             hovermode="closest",
             template="plotly_dark",

@@ -5,13 +5,13 @@ from pathlib import Path
 import pytest
 
 from DroneGen.Flygorithm.Algorithm import Algorithm
-from DroneGen.Graph.Map import Connection, Node
+from DroneGen.Graph.Map import Node
 from DroneGen.Graph.MapFactory import Factory
 from DroneGen.Orchestrator import orchestrator
 from input.receiver import receiver
 from input.validator import HubType, Map_
 from ui.visualizer.plotly_test import plotlyzer
-from ui.visualizer.turn_positions import replay_turns
+from ui.visualizer.turn_positions import TurnPositionReplayer
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -42,7 +42,7 @@ def test_animation_tracks_every_drone(filename: str) -> None:
     occupancy_before = {
         node: tuple(node.drones) for node in graph.nodes
     }
-    states = replay_turns(graph, movements)
+    states = TurnPositionReplayer(graph).replay(movements)
     figure = plotlyzer(graph).create_visualization(movements)
 
     assert len(states) == len(movements) + 1
@@ -84,7 +84,7 @@ connection: restricted-goal
     )
     assert connection.get_midpoint() == (0.5, -0.5)
 
-    positions = replay_turns(graph, movements)
+    positions = TurnPositionReplayer(graph).replay(movements)
     drone_id = drones[0].id
     assert positions[1][drone_id] is connection
     assert isinstance(positions[2][drone_id], Node)
@@ -107,7 +107,7 @@ def test_waiting_drones_remain_at_last_position() -> None:
     graph, drones, movements = build_simulation(
         path.read_text(encoding="utf-8")
     )
-    positions = replay_turns(graph, movements)
+    positions = TurnPositionReplayer(graph).replay(movements)
     assert positions[0][drones[1].id] is positions[1][drones[1].id]
 
 
