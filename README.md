@@ -73,6 +73,13 @@ Start the interactive Streamlit interface:
 python3 -m streamlit run ui/interface/app.py
 ```
 
+The map selector automatically lists all bundled `.txt` files in the
+`maps/easy`, `maps/medium`, `maps/hard`, and `maps/challenger`
+directories, ordered by difficulty and filename. It includes the nine
+mandatory maps and the optional Challenger stress-test map. The
+Challenger may not finish with the current algorithm; it is not part of
+the mandatory benchmarks.
+
 Select a map and use **Previous**, **Next**, **Play**, or **Pause**.
 The interface displays the selected turn and three counts:
 
