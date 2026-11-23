@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from DroneGen.base import MovementRecord
 from DroneGen.Graph.Map import Node, Connection, Graph
 from abc import ABC, abstractmethod
