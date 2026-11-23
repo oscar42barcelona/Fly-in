@@ -3,7 +3,7 @@
 from DroneGen.base import MovementRecord, flychestrator
 from DroneGen.Graph.Drone import Drone
 from DroneGen.Graph.Map import Graph, Node
-from DroneGen.Planning.MovementIntent import MovementIntent, MovementKind
+from DroneGen.Planning.base import MovementIntent, MovementKind
 from DroneGen.Planning.TurnPlanner import TurnPlanner
 
 
