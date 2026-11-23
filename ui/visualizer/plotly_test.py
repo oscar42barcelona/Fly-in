@@ -31,7 +31,7 @@ class plotlyzer(Visualizer):
     def _node_color(node: Node) -> str:
         """Use valid Plotly colors, with a fallback for arbitrary names."""
         supplied = (node.COLOR or "").strip()
-        if supplied.casefold() in ("", "none", "grey", "gray", "rainbow"):
+        if supplied.casefold() in ("", "none", "grey", "rainbow"):
             return _ZONE_COLORS[node.zone]
         try:
             scatter.Marker(color=supplied)
