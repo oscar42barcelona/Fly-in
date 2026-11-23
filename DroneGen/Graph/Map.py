@@ -98,12 +98,12 @@ class Connection:
 
         # o bien self.drones.popleft() o quitar el que me digan
 
-    def get_midpoint(self) -> (int, int):
-        pass
-        # obtener un punto representativo en la mitad 
-        #de los extremos para representación visual.
-        #Errores: no se han tratado casos especiales.
-        #Ejemplo: extremos (0, 0) y (4, 2) dan (2, 1).
+    def get_midpoint(self) -> tuple[float, float]:
+        """Return the midpoint between the two connected nodes."""
+        return (
+            (self.node_a.x + self.node_b.x) / 2,
+            (self.node_a.y + self.node_b.y) / 2,
+        )
 
         
 class Graph:
