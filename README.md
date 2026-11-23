@@ -1,97 +1,222 @@
+*This project has been created as part of the 42 curriculum by osuarez-*
+
 # Fly-in
 
-A 42 project that simulates drones moving through a network of connected zones. It includes input validation, movement planning, interactive visualization, and terminal output.
+## Description
 
-**Currently developed by:** `osuarez-`.
+Fly-in is a Python drone-routing and turn-scheduling simulation for 42. A
+text file describes connected zones, their coordinates, capacities, and
+traffic rules. The program calculates routes and schedules simultaneous
+movements until every drone reaches the exit.
 
-## Project Structure
+The objective is to finish in as few simulation turns as possible while
+respecting zone and connection capacities. Entering a **restricted** zone
+takes two turns: a drone occupies its incoming connection during the first
+turn and must arrive at the zone during the next.
 
-```text
-flyin/
-├── cli.py                     # Coordinates the flow between input, DroneGen, and UI.
-│
-├── input/                     # Data reception, validation, and formatting.
-│   ├── __init__.py            # Marks this directory as a package.
-│   ├── receiver.py            # Receives input data.
-│   ├── validator.py           # Validates input data using Pydantic.
-│   └── formatter.py           # Converts validated data into the format DroneGen expects.
-│
-├── dronegen/                  # Graph, drones, and movement planning.
-│   ├── flygorithm/            # Algorithmic logic.
-│   │   ├── __init__.py        # Marks this directory as a package.
-│   │   └── base.py            # Defines inputs, outputs, and the abstract method.
-│   │
-│   └── graph/                 # Objects containing the information the algorithm needs.
-│       ├── __init__.py        # Marks this directory as a package.
-│       ├── node.py            # Represents a graph node or zone.
-│       └── drone.py           # Represents a drone and its state.
-│
-└── ui/                        # Visualization, interface, and terminal output.
-    ├── __init__.py            # Marks this directory as a package.
-    │
-    ├── visualizer/            # Translates domain data into visual properties.
-    │   ├── __init__.py        # Marks this directory as a package.
-    │   └── ...                # Internal files will build traces and a Figure using Plotly.
-    │
-    ├── interface/             # Displays the Figure, controls, metrics, and text.
-    │   ├── __init__.py        # Marks this directory as a package.
-    │   └── ...                # Internal files will use Streamlit.
-    │
-    └── terminal.py            # Formats and prints drone movements for each turn.
-```
+The project includes command-line movement output, a Plotly map and turn
+animation, and a Streamlit interface with playback and drone metrics.
 
-## Responsibilities
+## Instructions
 
-### Orchestrator
+### Installation
 
-`cli.py` coordinates the flow between the three main blocks.
-
-### Input
-
-- `receiver.py`: receives data from the corresponding input source.
-- `validator.py`: validates the received data using Pydantic.
-- `formatter.py`: converts validated data into the format consumed by DroneGen.
-
-### DroneGen
-
-- `graph/`: contains the objects representing nodes and drones, together with the information required by the algorithm.
-- `flygorithm/`: contains the logic for planning and resolving drone movements.
-- `flygorithm/base.py`: defines the algorithm's input, output, and required abstract method.
-
-### UI
-
-- `visualizer/`: translates domain data into visual properties and builds Plotly traces and a Figure.
-- `interface/`: receives the Figure and simulation summaries, then displays them with controls, metrics, and text using Streamlit.
-- `terminal.py`: formats and prints simulation movements using the required terminal output format.
-
-The translation into visual properties belongs to `visualizer/`, keeping the graph logic independent of Plotly. Directory names describe responsibilities rather than technologies.
-
-## Streamlit turn explorer
-
-Install dependencies in a virtual environment, then start the local visualizer
-from the repository root:
+Use Python 3.12 or later. From the project root:
 
 ```bash
-python3 -m pip install -r dependencies.txt
-python3 -m streamlit run ui/interface/app.py
+python3 -m venv .venv
+source .venv/bin/activate
+make install
 ```
 
-Choose a map and use **Previous** / **Next** to inspect any completed
-simulation turn. **Play** advances the selected turn and its metrics, and
-**Pause** stops playback. The Streamlit controls are the only playback
-controls in this view, so the graph and metric counts always agree.
+### Run from the terminal
 
-The three metrics are **Delivered** (drones at the exit), **In transit**
-(drones occupying a restricted connection), and **Waiting** (drones that
-remain at a non-exit node without moving during that turn). Turn zero
-shows no waiting drones.
+```bash
+make run MAP=maps/easy/01_linear_path.txt
+```
 
-The simulation is calculated once per map version and cached for navigation.
-Editing a map invalidates its cached result. Stop the Streamlit server with
-**Ctrl+C** in the terminal; closing the browser tab does not stop the server.
-
-The standard command-line simulation remains independent of Streamlit:
+Equivalent direct command:
 
 ```bash
 python3 cli.py maps/easy/01_linear_path.txt
 ```
+
+Each output line represents a turn. A movement is written as
+`D<ID>-<zone>`, or `D<ID>-<connection>` while crossing a restricted
+connection. Drones that do not move are omitted. Standard output contains
+the movement records, not progress messages.
+
+### Visualize the simulation
+
+Export a standalone animated Plotly HTML:
+
+```bash
+python3 cli.py maps/medium/03_priority_puzzle.txt --visualize
+```
+
+This creates `flyin_preview.html` in the working directory without
+launching a browser process. Open it manually in a browser.
+
+Start the interactive Streamlit interface:
+
+```bash
+python3 -m streamlit run ui/interface/app.py
+```
+
+Select a map and use **Previous**, **Next**, **Play**, or **Pause**.
+The interface displays the selected turn and three counts:
+
+- **Delivered:** drones that have reached the exit.
+- **In transit:** drones occupying a connection on the way to a restricted
+  zone.
+- **Waiting:** drones at non-exit zones that did not move during that turn.
+
+Streamlit runs a local server. Stop it with **Ctrl+C** in the terminal;
+closing the browser window alone does not stop the server.
+
+### Development commands
+
+```bash
+make debug MAP=maps/easy/01_linear_path.txt
+make lint
+make clean
+python3 -m pytest -q
+```
+
+`make lint` runs `flake8 .` and `mypy .` with the flags required by the
+subject. The GitHub Actions workflow also verifies the nine mandatory
+benchmark maps and capacity invariants.
+
+## Example input and expected output
+
+Save the following as `/tmp/flyin_example.txt`:
+
+```text
+nb_drones: 1
+start_hub: start 0 0
+hub: mid 1 0
+end_hub: goal 2 0
+connection: start-mid
+connection: mid-goal
+```
+
+Run:
+
+```bash
+python3 cli.py /tmp/flyin_example.txt
+```
+
+Expected standard output:
+
+```text
+D1-mid
+D1-goal
+```
+
+The drone moves one zone per turn, so this map takes two turns.
+
+## Algorithm choices and implementation
+
+The application has separate responsibilities rather than one combined
+algorithm:
+
+1. **Parsing and validation:** `input.receiver` reads declarations, and
+   Pydantic models in `input.validator` check names, zone types,
+   connections, capacities and other input constraints.
+2. **Graph construction:** `DroneGen.Graph.MapFactory.Factory` creates
+   `Node`, `Connection`, `Graph`, and `Drone` objects.
+3. **Pathfinding:** `DroneGen.Flygorithm.Algorithm` uses Dijkstra to find
+   a minimum-cost route and Yen's algorithm to generate alternative simple
+   paths. Zone movement costs are used as edge-to-destination costs.
+   Priority zones are preferred when total movement costs tie.
+4. **Initial distribution:** `DroneGen.Orchestrator.orchestrator` assigns
+   routes using estimated path cost plus the number of drones already
+   allocated to each route. If all moves become blocked, it can reassign
+   drones to viable, already computed alternative routes.
+5. **Simultaneous turn scheduling:** `DroneGen.Planning.TurnPlanner`
+   proposes movements, checks zone occupancy and connection capacities,
+   accounts for simultaneous departures, and commits an approved set
+   together. The planner reserves next-turn arrival space for restricted
+   moves. It permits consecutive restricted crossings when the previous
+   drone's next-turn departure directly to the unlimited exit is assured
+   and the outgoing link has sufficient capacity.
+6. **Presentation:** the CLI prints movement records.
+   `ui.visualizer.plotly_test` builds Plotly figures; the historical
+   snapshots and metrics are prepared by dedicated classes, and
+   `ui.interface.app.FlyInApp` presents them through Streamlit.
+
+The initial route allocation and greedy conflict resolution are
+heuristics; finding several shortest paths does not guarantee globally
+optimal multi-drone scheduling on every possible map.
+
+## Mandatory subject benchmarks
+
+The subject requires no more than **125% of the optimal turn count**
+for each of its nine supplied easy, medium, and hard maps. The current
+GitHub Actions benchmark tests check completion, movement output and
+these limits; the movement-invariant tests separately check occupancy
+and restricted-zone timing after every turn.
+
+| Map | Subject optimum | Required maximum | Verified turns |
+| --- | ---: | ---: | ---: |
+| Easy 1 — Linear path | 4 | 5 | 4 |
+| Easy 2 — Simple fork | 4 | 5 | 4 |
+| Easy 3 — Basic capacity | 4 | 5 | 4 |
+| Medium 1 — Dead end trap | 8 | 10 | 8 |
+| Medium 2 — Circular loop | 10 | 12 | 10 |
+| Medium 3 — Priority puzzle | 6 | 7 | 7 |
+| Hard 1 — Maze nightmare | 13 | 16 | 13 |
+| Hard 2 — Capacity hell | 16 | 20 | 20 |
+| Hard 3 — Ultimate challenge | 26 | 32 | 27 |
+
+Re-run `python3 -m pytest -q -s tests/test_subject_benchmarks.py` to
+verify the results after changes to the routing engine.
+
+## Project organization
+
+```text
+Fly-in/
+├── cli.py
+├── Makefile
+├── dependencies.txt
+├── input/                  # Map parsing, Pydantic models, CLI integration
+├── DroneGen/
+│   ├── Graph/              # Nodes, links, drones and factories
+│   ├── Flygorithm/         # Dijkstra and Yen route search
+│   ├── Planning/           # Simultaneous movement intents and capacities
+│   └── Orchestrator.py     # Initial routes and turn execution
+├── ui/
+│   ├── visualizer/         # Historical positions, metrics, Plotly figures
+│   └── interface/          # Streamlit controls and turn presentation
+├── maps/                   # Subject examples, grouped by difficulty
+├── tests/                  # Regression, movement and benchmark tests
+└── archive/                # Superseded learning experiments as text
+```
+
+## Resources
+
+- [Python documentation: `heapq`](https://docs.python.org/3/library/heapq.html)
+  — priority queues used in shortest-path search.
+- [Python documentation: `dataclasses`](https://docs.python.org/3/library/dataclasses.html)
+  — immutable records and typed simulation data.
+- [Pydantic documentation](https://docs.pydantic.dev/)
+  — input validation and model field rules.
+- [Plotly Python documentation](https://plotly.com/python/)
+  — graph traces, frames and HTML animation.
+- [Streamlit documentation](https://docs.streamlit.io/)
+  — interface controls, fragments, state and caching.
+- [NetworkX documentation: shortest paths](https://networkx.org/documentation/stable/reference/algorithms/shortest_paths.html)
+  — conceptual reference for pathfinding and graph traversal; Fly-in
+  implements its own pathfinding logic.
+
+### Use of AI
+
+ChatGPT was used as a programming support tool for architectural
+discussion, explanations of Dijkstra/Yen and scheduling concepts,
+reviewing Python type annotations, correcting formatting and static
+analysis issues, proposing Plotly/Streamlit visualization code,
+investigating turn-capacity conflicts, and creating regression tests and
+GitHub Actions benchmark checks. AI-assisted changes affect the
+`DroneGen`, `input`, `ui`, testing, and documentation layers.
+The repository code and the automated tests are the source of truth;
+AI-generated suggestions must be reviewed and verified before submission.

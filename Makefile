@@ -7,7 +7,7 @@ install:
 	$(PYTHON) -m pip install -r dependencies.txt
 
 run:
-	$(PYTHON) cli.py $(MAP)
+	@$(PYTHON) cli.py $(MAP)
 
 debug:
 	$(PYTHON) -m pdb cli.py $(MAP)

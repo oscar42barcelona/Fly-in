@@ -33,9 +33,9 @@ def simulate(
     while not all(drone.delivered for drone in drones):
         assert len(turns) < max_turns, "Simulation did not terminate"
         proposed = planner.collect_intents(drones, routes, graph)
-        approved = planner.resolve_movements(proposed, graph)
+        approved = planner.resolve_movements(proposed, graph, routes)
         assert approved, "No movement was approved"
-        assert planner.fits_capacities(approved, graph)
+        assert planner.fits_capacities(approved, graph, routes)
 
         turn = [(intent.drone.id, intent.kind) for intent in approved]
         planner.execute_movements(approved)
@@ -82,7 +82,12 @@ def simulate(
         "maps/easy/01_linear_path.txt",
         "maps/easy/02_simple_fork.txt",
         "maps/easy/03_basic_capacity.txt",
+        "maps/medium/01_dead_end_trap.txt",
+        "maps/medium/02_circular_loop.txt",
         "maps/medium/03_priority_puzzle.txt",
+        "maps/hard/01_maze_nightmare.txt",
+        "maps/hard/02_capacity_hell.txt",
+        "maps/hard/03_ultimate_challenge.txt",
     ],
 )
 def test_bundled_maps_respect_capacity(filename: str) -> None:
@@ -105,5 +110,5 @@ connection: restricted-goal [max_link_capacity=1]
     turns = simulate(text)
     assert (1, MovementKind.START_TRANSIT) in turns[0]
     assert (1, MovementKind.END_TRANSIT) in turns[1]
-    assert (2, MovementKind.START_TRANSIT) in turns[2]
-    assert (2, MovementKind.END_TRANSIT) in turns[3]
+    assert (2, MovementKind.START_TRANSIT) in turns[1]
+    assert (2, MovementKind.END_TRANSIT) in turns[2]
