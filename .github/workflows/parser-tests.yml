@@ -29,6 +29,8 @@ jobs:
           python-version: '3.12'
       - name: Install benchmark dependencies
         run: python -m pip install "pytest>=8,<10" "pydantic>=2,<3"
+      - name: Diagnose bottlenecks in two currently failing maps
+        run: python -m pytest -q -s tests/test_subject_diagnostics.py
       - name: Check nine mandatory maps against 125% turn limits
         run: python -m pytest -q -s tests/test_subject_benchmarks.py
 
