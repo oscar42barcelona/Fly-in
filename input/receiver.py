@@ -22,6 +22,8 @@ class receiver:
 
     def reader(self) -> list[str]:
         """Read a supplied map or the first command-line argument."""
+        if self.path is None and len(argv) <= 1:
+            raise ValueError("Line 1: map file path is required")
         path = self.path if self.path is not None else argv[1]
         with open(path, "r", encoding="utf-8") as file:
             return file.readlines()
@@ -54,51 +56,51 @@ class receiver:
         result["type"] = self.typer(hub_type.strip())
 
         line = line.strip()
-        name_coord = line
+        if line.count("[") > 1 or line.count("]") > 1:
+            raise ValueError(f"Line {number}: invalid metadata: {line}")
+        if "]" in line and "[" not in line:
+            raise ValueError(f"Line {number}: stray ']': {line}")
 
+        name_coord = line
         if "[" in line:
             name_coord, features = line.split("[", 1)
-            name_coord = name_coord.strip()
-            features = features.strip()
-
             if not features.endswith("]"):
                 raise ValueError(
-                    f"Line {number}: Missing ']'. Content: {line}"
+                    f"Line {number}: missing closing ']': {line}"
                 )
-
-            features = features[:-1]
-            for item in features.split(" ", 3):
-                item = item.strip()
-                if "=" not in item:
+            entries = features[:-1].split()
+            if not entries:
+                raise ValueError(f"Line {number}: empty metadata: {line}")
+            for item in entries:
+                if item.count("=") != 1:
                     raise ValueError(
-                        f"Line {number}: Missing '=' or extra space. "
-                        f"Content: {line}"
+                        f"Line {number}: invalid metadata item: {item}"
                     )
-
                 key, value = item.split("=", 1)
                 if key not in permitted:
                     raise ValueError(
-                        f"Line {number}: wrong spelling :(. "
-                        f"Content: {line}"
+                        f"Line {number}: unknown hub metadata: {key}"
                     )
-
                 if key in seen:
                     raise ValueError(
-                        f"Line {number}: Non repeated features, please :) "
-                        f"Content: {line}"
+                        f"Line {number}: duplicate hub metadata: {key}"
+                    )
+                if not value:
+                    raise ValueError(
+                        f"Line {number}: empty value for {key}"
                     )
                 seen.add(key)
-                result[key.strip()] = value.strip()
+                result[key] = value
 
-        if name_coord.count(" ") != 2:
+        coordinates = name_coord.split()
+        if len(coordinates) != 3:
             raise ValueError(
-                f"Line {number}: Missing or extra Space. Content: {line}"
+                f"Line {number}: expected name and two coordinates: {line}"
             )
-
-        name, x, y = name_coord.split(" ", 2)
-        result["name"] = name.strip()
-        result["x"] = x.strip()
-        result["y"] = y.strip()
+        name, x, y = coordinates
+        result["name"] = name
+        result["x"] = x
+        result["y"] = y
         return result
 
     def FormatConnection(self, line: str, number: int) -> dict[str, str]:
@@ -111,43 +113,40 @@ class receiver:
             )
 
         line = line.split(":", 1)[1].strip()
+        if line.count("[") > 1 or line.count("]") > 1:
+            raise ValueError(f"Line {number}: invalid metadata: {line}")
+        if "]" in line and "[" not in line:
+            raise ValueError(f"Line {number}: stray ']': {line}")
+
         connection_text = line
-
         if "[" in line:
-            connection_text, capacity = line.split("[", 1)
-            capacity = capacity.strip()
-
-            if not capacity.endswith("]"):
+            connection_text, metadata = line.split("[", 1)
+            if not metadata.endswith("]"):
                 raise ValueError(
-                    f"Line {number}: Missing ']'. Content: {line}"
+                    f"Line {number}: missing closing ']': {line}"
                 )
-
-            capacity = capacity[:-1].strip()
-            if " " in capacity:
+            entries = metadata[:-1].split()
+            if len(entries) != 1 or entries[0].count("=") != 1:
                 raise ValueError(
-                    f"Line {number}: Extra Space or args. Content: {line}"
+                    f"Line {number}: expected one link capacity: {line}"
                 )
-
-            if "=" not in capacity:
+            key, value = entries[0].split("=", 1)
+            if key != "max_link_capacity" or not value:
                 raise ValueError(
-                    f"Line {number}: Missing '='. Content: {line}"
+                    f"Line {number}: invalid connection metadata: {line}"
                 )
-
-            key, value = capacity.split("=", 1)
-            if key.strip() != "max_link_capacity":
-                raise ValueError(
-                    f"Line {number}: Invalid connection capacity key. "
-                    f"Content: {line}"
-                )
-            result["link_capacity"] = value.strip()
+            result["link_capacity"] = value
 
         connection_text = connection_text.strip()
-        if "-" not in connection_text:
+        if connection_text.count("-") != 1:
             raise ValueError(
-                f"Line {number}: Missing '-'. Content: {line}"
+                f"Line {number}: expected zone1-zone2: {line}"
             )
-
         hub1, hub2 = connection_text.split("-", 1)
+        if not hub1 or not hub2:
+            raise ValueError(
+                f"Line {number}: connection endpoints missing: {line}"
+            )
         result["hub1"] = hub1.strip()
         result["hub2"] = hub2.strip()
         return result
@@ -157,6 +156,10 @@ class receiver:
         hubs: list[dict[str, str]] = []
         connections: list[dict[str, str]] = []
         data: dict[str, object] = {}
+        declared_hubs: set[str] = set()
+        self.index_hubs.clear()
+        self.index_connections.clear()
+        self.index_nbdrones.clear()
 
         first_data_line = True
         for number, line in enumerate(lines, start=1):
@@ -173,12 +176,17 @@ class receiver:
                 first_data_line = False
 
             if line.startswith("nb_drones:"):
+                if self.index_nbdrones:
+                    raise ValueError(
+                        f"Line {number}: duplicate nb_drones declaration"
+                    )
                 data.update(self.FormatMap(line))
                 self.index_nbdrones.append(number)
 
             elif line.startswith(("start_hub:", "end_hub:", "hub:")):
                 hub = self.FormatHub(line, number)
                 hubs.append(hub)
+                declared_hubs.add(hub["name"])
                 self.index_hubs.append(number)
 
                 if line.startswith("start_hub:"):
@@ -188,6 +196,14 @@ class receiver:
 
             elif line.startswith("connection:"):
                 connection = self.FormatConnection(line, number)
+                if (
+                    connection["hub1"] not in declared_hubs
+                    or connection["hub2"] not in declared_hubs
+                ):
+                    raise ValueError(
+                        f"Line {number}: connection endpoints must "
+                        "refer to previously defined zones"
+                    )
                 connections.append(connection)
                 self.index_connections.append(number)
             else:
@@ -243,20 +259,53 @@ class receiver:
 
         print(item["msg"])
 
-    def Process(self) -> Map_ | None:
-        """Read, parse and validate the map; print input errors if needed."""
+    def load(self) -> Map_:
+        """Parse a map or raise a readable error with its source line."""
+        lines = self.reader()
+        parsed = self.slicer(lines)
+        context = self.context_creator()
         try:
-            lines = self.reader()
-            parsed = self.slicer(lines)
-            context = self.context_creator()
             return Map_.model_validate(parsed, context=context)
-        except IndexError:
-            print("We need a map to run :)")
-        except (FileNotFoundError, PermissionError) as error:
-            print(error)
         except ValidationError as error:
-            for item in error.errors():
-                self.print_error(item, context)
-        except ValueError as error:
+            first = error.errors()[0]
+            message = self._validation_message(first, len(lines))
+            raise ValueError(message) from error
+
+    def _validation_message(
+        self, error: ErrorDetails, line_count: int
+    ) -> str:
+        """Resolve the location of a Pydantic error to a source line."""
+        location = error["loc"]
+        indices = self.context_creator()
+        line_number = line_count + 1
+
+        if location:
+            category = str(location[0])
+            if category in indices and indices[category]:
+                location_index = (
+                    location[1]
+                    if len(location) > 1 and isinstance(location[1], int)
+                    else 0
+                )
+                if location_index < len(indices[category]):
+                    line_number = indices[category][location_index]
+
+        details = error.get("ctx") or {}
+        for category, index in details.items():
+            if (
+                category in indices
+                and isinstance(index, int)
+                and index < len(indices[category])
+            ):
+                line_number = indices[category][index]
+                break
+
+        return f"Line {line_number}: {error['msg']}"
+
+    def Process(self) -> Map_ | None:
+        """Retain the historical non-raising parser interface."""
+        try:
+            return self.load()
+        except (OSError, ValueError) as error:
             print(error)
-        return None
+            return None
