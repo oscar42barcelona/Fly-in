@@ -81,6 +81,13 @@ Challenger may not finish with the current algorithm; it is not part of
 the mandatory benchmarks.
 
 Select a map and use **Previous**, **Next**, **Play**, or **Pause**.
+When a map is selected, Streamlit prints the subject-format movement lines
+once in the terminal that launched the Streamlit server. Changing the map
+prints the newly selected simulation. Navigating or playing turns does not
+print duplicate lines. This is the full calculated output, not a live
+turn-by-turn terminal playback; for evaluation, run `cli.py` to obtain
+only the movement lines on standard output.
+
 The interface displays the selected turn and three counts:
 
 - **Delivered:** drones that have reached the exit.

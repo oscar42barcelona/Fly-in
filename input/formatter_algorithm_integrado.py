@@ -21,6 +21,16 @@ class SimulationResult:
     movements: dict[int, list[MovementRecord]]
     total_drones: int
 
+    def movement_lines(self) -> tuple[str, ...]:
+        """Format one subject-compliant movement line per simulation turn."""
+        return tuple(
+            " ".join(
+                f"D{record.drone_id}-{record.location}"
+                for record in records
+            )
+            for records in self.movements.values()
+        )
+
 
 class SimulationRunner:
     """Coordinate validated input, graph construction and turn output."""
@@ -62,11 +72,8 @@ class SimulationRunner:
     def run(self) -> None:
         """Print movements and optionally export the Plotly visualization."""
         result = self.simulate()
-        for records in result.movements.values():
-            print(" ".join(
-                f"D{record.drone_id}-{record.location}"
-                for record in records
-            ))
+        for line in result.movement_lines():
+            print(line)
 
         if self.visualize:
             from ui.visualizer.plotly_test import plotlyzer

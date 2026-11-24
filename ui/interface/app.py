@@ -106,6 +106,9 @@ class FlyInApp:
         if st.session_state.get("map_key") != map_key:
             st.session_state["map_key"] = map_key
             st.session_state["playback"] = PlaybackController()
+            # Print once per map selection, not on playback or reruns.
+            for line in self.simulation.movement_lines:
+                print(line, flush=True)
 
         self.playback = st.session_state["playback"]
         refresh = "850ms" if self.playback.playing else None
