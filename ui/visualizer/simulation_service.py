@@ -34,6 +34,7 @@ class SimulationData:
     figure: Figure
     metrics: dict[int, TurnMetrics]
     total_drones: int
+    movement_lines: tuple[str, ...]
 
 
 class SimulationService:
@@ -94,4 +95,5 @@ class SimulationService:
             figure=figure,
             metrics=metrics,
             total_drones=result.total_drones,
+            movement_lines=result.movement_lines(),
         )
