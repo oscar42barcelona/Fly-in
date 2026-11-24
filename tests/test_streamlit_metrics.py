@@ -38,6 +38,8 @@ def test_service_returns_every_turn(
     total = result.total_drones
 
     assert isinstance(result, SimulationData)
+    assert len(result.movement_lines) == len(result.figure.frames) - 1
+    assert sum(line.count("-goal") for line in result.movement_lines) == total
     assert total == drone_count
     assert list(metrics) == list(range(len(result.figure.frames)))
     assert metrics[0] == TurnMetrics(delivered=0, transit=0, waiting=0)
@@ -199,3 +201,44 @@ def test_streamlit_play_and_pause_update_controller() -> None:
     app.button[1].click().run()
     assert not app.exception
     assert app.session_state["playback"].turn == 2
+
+
+def test_streamlit_prints_each_map_only_when_selected(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A map selection prints subject lines, not playback reruns."""
+    from streamlit.testing.v1 import AppTest
+
+    app = AppTest.from_file(
+        str(ROOT / "ui/interface/app.py"), default_timeout=20
+    ).run()
+    assert not app.exception
+    initial = capsys.readouterr().out
+    assert initial.count("D1-waypoint1") == 1
+    assert "D2-goal" in initial
+
+    app.button[1].click().run()
+    assert not app.exception
+    assert capsys.readouterr().out == ""
+
+    app.button[2].click().run()
+    assert not app.exception
+    assert capsys.readouterr().out == ""
+
+    app.button[3].click().run()
+    assert not app.exception
+    assert capsys.readouterr().out == ""
+
+    app.selectbox[0].set_value("Medium / 03 Priority Puzzle").run()
+    assert not app.exception
+    priority = capsys.readouterr().out
+    assert priority.count("D1-fast_junction") == 1
+    assert "D5-goal" in priority
+
+    app.button[1].click().run()
+    assert not app.exception
+    assert capsys.readouterr().out == ""
+
+    app.selectbox[0].set_value("Easy / 01 Linear Path").run()
+    assert not app.exception
+    assert capsys.readouterr().out.count("D1-waypoint1") == 1
